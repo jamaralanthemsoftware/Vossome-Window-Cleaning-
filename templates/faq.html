@@ -16,7 +16,7 @@
     {% for item in faqs %}
       <details>
         <summary>{{ item.question }}</summary>
-        <div>{{ item.answer|linebreaks }}</div>
+        <div>{{ item.answer|striptags|linebreaks }}</div>
       </details>
     {% endfor %}
   </div>
