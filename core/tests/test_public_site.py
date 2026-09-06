@@ -1,12 +1,27 @@
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from core.models import FAQ, Page, Service
 
 
 class PublicSiteStructureTests(TestCase):
+    @override_settings(ALLOWED_HOSTS=["vossome-window-cleaning.example"])
+    def test_internal_platform_health_probe_bypasses_host_validation_only_for_healthz(self):
+        health_response = self.client.get(
+            reverse("healthz"),
+            HTTP_HOST="100.127.38.14",
+        )
+        public_response = self.client.get(
+            reverse("home"),
+            HTTP_HOST="100.127.38.14",
+        )
+
+        self.assertEqual(health_response.status_code, 200)
+        self.assertEqual(health_response.json(), {"status": "ok"})
+        self.assertEqual(public_response.status_code, 400)
+
     def test_required_pages_render_without_content_records(self):
         for name in ["home", "about", "services", "faq", "contact"]:
             with self.subTest(name=name):
