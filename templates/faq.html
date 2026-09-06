@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Frequently asked questions | {{ site_settings.site_name|default:"Client Website" }}{% endblock %}
+{% block meta_description %}Answers to frequently asked questions about our services and process.{% endblock %}
+{% block open_graph_title %}Frequently asked questions | {{ site_settings.site_name|default:"Client Website" }}{% endblock %}
+{% block open_graph_description %}Answers to frequently asked questions about our services and process.{% endblock %}
+{% block twitter_title %}Frequently asked questions | {{ site_settings.site_name|default:"Client Website" }}{% endblock %}
+{% block twitter_description %}Answers to frequently asked questions about our services and process.{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <p class="eyebrow">Helpful information</p>
+  <h1>Questions? We’ve got you.</h1>
+  <p class="lead">A few things neighbors ask before we get the ladders out.</p>
+</section>
+{% if faqs %}
+  <div class="faq-list">
+    {% for item in faqs %}
+      <details>
+        <summary>{{ item.question }}</summary>
+        <div>{{ item.answer|linebreaks }}</div>
+      </details>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="faq-list"><details><summary>What areas do you serve?</summary><div>We serve St. Charles and nearby St. Louis communities. If you’re not sure, give us a call at (314) 775-1080.</div></details><details><summary>Do you clean residential and commercial windows?</summary><div>Yes. We work with homeowners, storefronts, offices, and commercial properties.</div></details><details><summary>How do I get a quote?</summary><div>Send a note through our contact form or call the Voss at (314) 775-1080. We’ll learn what you need and provide a clear next step.</div></details></div>
+{% endif %}
+{% endblock %}

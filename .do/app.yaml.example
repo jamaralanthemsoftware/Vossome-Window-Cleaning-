@@ -1,0 +1,91 @@
+name: replace-with-client-slug
+region: nyc
+
+services:
+  - name: web
+    github:
+      repo: replace-with-owner/replace-with-repository
+      branch: main
+      deploy_on_push: true
+    dockerfile_path: Dockerfile
+    source_dir: /
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    health_check:
+      http_path: /healthz/
+    envs:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+        scope: RUN_TIME
+      - key: SECRET_KEY
+        type: SECRET
+        scope: RUN_TIME
+      - key: DATABASE_URL
+        type: SECRET
+        scope: RUN_TIME
+      - key: REQUIRE_POSTGRES
+        value: "true"
+        scope: RUN_TIME
+      - key: ALLOWED_HOSTS
+        value: replace-with-domain.example
+        scope: RUN_TIME
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://replace-with-domain.example
+        scope: RUN_TIME
+      - key: SITE_URL
+        value: https://replace-with-domain.example
+        scope: RUN_TIME
+      - key: ADMIN_URL
+        value: replace-with-unique-admin-path/
+        scope: RUN_TIME
+      - key: ADMIN_LOCAL_LOGIN_URL
+        value: replace-with-unique-emergency-path/
+        scope: RUN_TIME
+      - key: ENABLE_GOOGLE_ADMIN_SSO
+        value: "true"
+        scope: RUN_TIME
+      - key: ADMIN_GOOGLE_ALLOWED_EMAILS
+        value: replace-with-approved-admin@example.com
+        scope: RUN_TIME
+      - key: GOOGLE_OAUTH_CLIENT_ID
+        type: SECRET
+        scope: RUN_TIME
+      - key: GOOGLE_OAUTH_CLIENT_SECRET
+        type: SECRET
+        scope: RUN_TIME
+
+jobs:
+  - name: migrate
+    kind: PRE_DEPLOY
+    github:
+      repo: replace-with-owner/replace-with-repository
+      branch: main
+      deploy_on_push: true
+    dockerfile_path: Dockerfile
+    source_dir: /
+    run_command: python manage.py migrate --noinput
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    envs:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+        scope: RUN_TIME
+      - key: SECRET_KEY
+        type: SECRET
+        scope: RUN_TIME
+      - key: DATABASE_URL
+        type: SECRET
+        scope: RUN_TIME
+      - key: REQUIRE_POSTGRES
+        value: "true"
+        scope: RUN_TIME
+      - key: ALLOWED_HOSTS
+        value: replace-with-domain.example
+        scope: RUN_TIME
+      - key: ADMIN_URL
+        value: replace-with-unique-admin-path/
+        scope: RUN_TIME
+      - key: ADMIN_LOCAL_LOGIN_URL
+        value: replace-with-unique-emergency-path/
+        scope: RUN_TIME

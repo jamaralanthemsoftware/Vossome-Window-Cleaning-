@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load static site_tags %}
+{% block title %}{% if page %}{{ page.seo_title }}{% else %}About us{% endif %} | {{ site_settings.site_name|default:"Client Website" }}{% endblock %}
+{% block meta_description %}{% if page %}{{ page.seo_description }}{% else %}Learn more about our organization, values, and approach.{% endif %}{% endblock %}
+{% block open_graph_type %}article{% endblock %}
+{% block open_graph_title %}{% if page %}{{ page.resolved_open_graph_title }}{% else %}About us{% endif %}{% endblock %}
+{% block open_graph_description %}{% if page %}{{ page.resolved_open_graph_description }}{% else %}Learn more about our organization, values, and approach.{% endif %}{% endblock %}
+{% block twitter_title %}{% if page %}{{ page.resolved_open_graph_title }}{% else %}About us{% endif %}{% endblock %}
+{% block twitter_description %}{% if page %}{{ page.resolved_open_graph_description }}{% else %}Learn more about our organization, values, and approach.{% endif %}{% endblock %}
+{% block open_graph_image %}
+  {% if page.open_graph_image %}
+    <meta property="og:image" content="{{ page.open_graph_image.url|absolute_url:request }}">
+    <meta property="og:image:alt" content="{{ page.resolved_open_graph_title }}">
+  {% else %}
+    {{ block.super }}
+  {% endif %}
+{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="split">
+    <div class="image-frame">
+      <img src="{% static 'images/matt-voss.jpg' %}" alt="Matt Voss, owner of Vossome Window Cleaning">
+    </div>
+    <article class="prose service-detail">
+      <p class="eyebrow">The people behind the sparkle</p>
+      <h1>{% if page %}{{ page.title }}{% else %}The Voss story{% endif %}</h1>
+      {% if page %}
+        {% if page.summary %}<p class="lead">{{ page.summary|striptags }}</p>{% endif %}
+        {{ page.body|striptags|linebreaks }}
+      {% else %}
+        <p class="lead">Vossome Window Cleaning is a family-owned St. Charles company run by Matt Voss. We started with a squeegee, a strong work ethic, and a simple belief: do the job right and leave people better than we found them.</p>
+        <p>We clean windows, wash away years of buildup, and keep gutters moving across St. Charles and nearby St. Louis communities. We also believe a local business should act local, which is why giving back to organizations like The Covering House remains part of our story.</p>
+        <p>Professional does not have to mean stuffy. Expect a friendly crew, clear communication, and a finish that feels unmistakably <strong>#awesomeVossome</strong>.</p>
+      {% endif %}
+    </article>
+  </div>
+</section>
+{% endblock %}

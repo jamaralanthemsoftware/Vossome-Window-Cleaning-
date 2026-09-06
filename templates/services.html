@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Services | {{ site_settings.site_name|default:"Client Website" }}{% endblock %}
+{% block meta_description %}Explore the services offered by {{ site_settings.site_name|default:"our team" }}.{% endblock %}
+{% block open_graph_title %}Services | {{ site_settings.site_name|default:"Client Website" }}{% endblock %}
+{% block open_graph_description %}Explore the services offered by {{ site_settings.site_name|default:"our team" }}.{% endblock %}
+{% block twitter_title %}Services | {{ site_settings.site_name|default:"Client Website" }}{% endblock %}
+{% block twitter_description %}Explore the services offered by {{ site_settings.site_name|default:"our team" }}.{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <p class="eyebrow">The Vossome lineup</p>
+  <h1>Good clean fun.</h1>
+  <p class="lead">The right tools, the right attitude, and a finish you can see from the curb.</p>
+</section>
+{% if services %}
+  <section class="grid" aria-label="Services">
+    {% for service in services %}
+      <article class="service-card">
+        <h2><a href="{{ service.get_absolute_url }}">{{ service.title }}</a></h2>
+        {% if service.summary %}<p>{{ service.summary }}</p>{% endif %}
+        <a href="{{ service.get_absolute_url }}">Learn more about {{ service.title }}</a>
+      </article>
+    {% endfor %}
+  </section>
+{% else %}
+  <p class="empty-state">Our service menu is getting polished. Call (314) 775-1080 and we’ll talk through your project.</p>
+{% endif %}
+{% endblock %}

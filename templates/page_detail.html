@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load site_tags %}
+{% block title %}{{ object.seo_title }}{% endblock %}
+{% block meta_description %}{{ object.seo_description }}{% endblock %}
+{% block open_graph_type %}article{% endblock %}
+{% block open_graph_title %}{{ object.resolved_open_graph_title }}{% endblock %}
+{% block open_graph_description %}{{ object.resolved_open_graph_description }}{% endblock %}
+{% block twitter_title %}{{ object.resolved_open_graph_title }}{% endblock %}
+{% block twitter_description %}{{ object.resolved_open_graph_description }}{% endblock %}
+{% block open_graph_image %}
+  {% if object.open_graph_image %}
+    <meta property="og:image" content="{{ object.open_graph_image.url|absolute_url:request }}">
+    <meta property="og:image:alt" content="{{ object.resolved_open_graph_title }}">
+  {% else %}
+    {{ block.super }}
+  {% endif %}
+{% endblock %}
+{% block content %}
+<article class="prose">
+  <h1>{{ object.title }}</h1>
+  {% if object.summary %}<p class="lead">{{ object.summary }}</p>{% endif %}
+  {{ object.body|linebreaks }}
+</article>
+{% endblock %}

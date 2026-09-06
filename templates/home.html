@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+{% block open_graph_title %}{{ site_settings.default_open_graph_title|default:site_settings.site_name|default:"Client Website" }}{% endblock %}
+{% block open_graph_description %}{{ site_settings.default_open_graph_description|default:site_settings.default_meta_description|default:"" }}{% endblock %}
+{% block content %}
+<section class="hero"><div class="hero-inner">
+  <p class="eyebrow">Window cleaning · pressure washing · gutter care</p>
+  <h1>{{ site_settings.tagline|default:"Clean windows. Big Voss energy." }}</h1>
+  <p class="lead">St. Charles’ family-owned crew for homes and businesses that deserve to look awesome. We bring the sparkle, you keep the view.</p>
+  <div class="hero-actions"><a class="button orange" href="{% url 'contact' %}">Get your free quote</a><a class="button secondary" href="tel:13147751080">Call (314) 775-1080</a></div>
+  <div class="hero-badge">#awesome<br>Vossome</div>
+</div>
+</section>
+<section class="section">
+  <div class="section-heading"><p class="eyebrow">The Vossome lineup</p><h2>We make the outside<br>feel brand new.</h2><p class="lead">From a hard-working storefront to your favorite patio, our local crew handles the jobs that make your place shine.</p></div>
+  <div class="service-grid">
+  {% if services %}
+    {% for service in services %}
+      <article class="service-card"><h3><a href="{{ service.get_absolute_url }}">{{ service.title }}</a></h3><p>{{ service.summary|default:"A careful clean with a seriously satisfying finish." }}</p><a class="arrow" href="{{ service.get_absolute_url }}">See the service →</a>
+      </article>
+    {% endfor %}
+  {% else %}
+    <article class="service-card"><h3><a href="{% url 'services' %}">Window cleaning</a></h3><p>Crystal-clear residential and commercial windows, inside and out.</p><a class="arrow" href="{% url 'services' %}">See the service →</a></article>
+    <article class="service-card"><h3><a href="{% url 'services' %}">Pressure washing</a></h3><p>Freshen up siding, driveways and outdoor spaces with the right pressure.</p><a class="arrow" href="{% url 'services' %}">See the service →</a></article>
+    <article class="service-card"><h3><a href="{% url 'services' %}">Gutter cleaning</a></h3><p>Clear, tidy gutters that keep rain moving where it should.</p><a class="arrow" href="{% url 'services' %}">See the service →</a></article>
+    <article class="service-card"><h3><a href="{% url 'services' %}">Concrete patios</a></h3><p>Blast away the buildup and bring your outdoor hangout back.</p><a class="arrow" href="{% url 'services' %}">See the service →</a></article>
+  {% endif %}
+  </div>
+  <p><a class="button" href="{% url 'services' %}">View all services</a></p>
+</section>
+<section class="section"><div class="split"><div class="image-frame"><img src="{% static 'images/matt-voss.jpg' %}" alt="Matt Voss, owner of Vossome Window Cleaning"></div><div class="story"><p class="eyebrow">Start with why</p><h2>Small business.<br>Big heart.</h2><p>Vossome started with Matt Voss, a window washer who wanted to build a company the right way: show up, do excellent work, and help the community along the way.</p><p>That means treating your home like our own and giving back whenever we can. It is the Voss way. #likeaVoss</p><a class="button secondary" href="{% url 'about' %}">Meet the family</a></div></div></section>
+<section class="section"><div class="section-heading"><p class="eyebrow">Local, reliable, ready</p><h2>Let’s make your place awesome.</h2><p class="lead">Tell us what needs a little Vossome attention. We’ll follow up with a clear quote and a plan that fits.</p><a class="button orange" href="{% url 'contact' %}">Start a conversation</a></div></section>
+{% endblock %}

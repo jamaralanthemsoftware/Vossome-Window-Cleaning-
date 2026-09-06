@@ -1,0 +1,13 @@
+{% load static %}<div class="site-header-wrap"><header class="site-header">
+  <a class="brand" href="{% url 'home' %}" aria-label="Vossome Window Cleaning home"><img src="{% static 'images/logo.jpg' %}" alt="Vossome Window Cleaning"></a>
+  <nav class="main-nav" aria-label="Main navigation">
+    <a href="{% url 'home' %}">Home</a>
+    <a href="{% url 'about' %}">About us</a>
+    <a href="{% url 'services' %}">Services</a>
+    <a href="{% url 'faq' %}">FAQ</a>
+    {% for page in navigation_pages %}
+      <a href="{{ page.get_absolute_url }}">{{ page.title }}</a>
+    {% endfor %}
+    <a class="nav-cta" href="{% url 'contact' %}">Get a free quote</a>
+  </nav>
+</header></div>

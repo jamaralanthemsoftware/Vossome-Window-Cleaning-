@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static site_tags %}
+{% block title %}{{ object.seo_title }}{% endblock %}
+{% block meta_description %}{{ object.seo_description }}{% endblock %}
+{% block open_graph_type %}article{% endblock %}
+{% block open_graph_title %}{{ object.resolved_open_graph_title }}{% endblock %}
+{% block open_graph_description %}{{ object.resolved_open_graph_description }}{% endblock %}
+{% block twitter_title %}{{ object.resolved_open_graph_title }}{% endblock %}
+{% block twitter_description %}{{ object.resolved_open_graph_description }}{% endblock %}
+{% block open_graph_image %}
+  {% if object.open_graph_image %}
+    <meta property="og:image" content="{{ object.open_graph_image.url|absolute_url:request }}">
+    <meta property="og:image:alt" content="{{ object.resolved_open_graph_title }}">
+  {% else %}
+    {{ block.super }}
+  {% endif %}
+{% endblock %}
+{% block content %}
+<section class="service-hero service-hero--{{ object.slug }}">
+  {% if object.slug == "window-cleaning" %}
+    <img src="{% static 'images/windows-exterior.jpg' %}" alt="Professionally cleaned windows on a St. Charles home">
+  {% elif object.slug == "pressure-washing" %}
+    <img src="{% static 'images/service-pressure-washing.jpg' %}" alt="Professional pressure washing on a residential property">
+  {% elif object.slug == "gutter-cleaning" %}
+    <img src="{% static 'images/service-gutter-cleaning.jpg' %}" alt="Professional gutter cleaning at a residential property">
+  {% elif object.slug == "concrete-patio-cleaning" %}
+    <img src="{% static 'images/service-concrete-patio-cleaning.jpg' %}" alt="Professional cleaning of a concrete patio">
+  {% else %}
+    <img src="{% static 'images/water.jpg' %}" alt="">
+  {% endif %}
+  <div class="service-hero-shade"></div>
+  <div class="service-hero-content">
+    <p class="eyebrow">Local exterior cleaning · St. Charles, Missouri</p>
+    <h1>{{ object.title }}</h1>
+    {% if object.summary %}<p class="lead">{{ object.summary|striptags }}</p>{% endif %}
+    <a class="button orange" href="{% url 'contact' %}">Get a free quote</a>
+  </div>
+</section>
+
+<article class="prose service-detail">
+  <div class="service-copy">{{ object.body|safe }}</div>
+  <div class="service-cta">
+    <h2>Ready to make your property look Vossome?</h2>
+    <p>Tell us what needs attention and we’ll follow up with a clear next step.</p>
+    <a class="button orange" href="{% url 'contact' %}">Get a free quote</a>
+    {% if site_settings.contact_phone %}
+      <a class="button" href="tel:{{ site_settings.contact_phone|cut:'('|cut:')'|cut:' '|cut:'-' }}">Call {{ site_settings.contact_phone }}</a>
+    {% endif %}
+  </div>
+</article>
+{% endblock %}
