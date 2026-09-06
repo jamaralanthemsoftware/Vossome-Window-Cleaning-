@@ -11,6 +11,27 @@
   <div class="hero-badge">#awesome<br>Vossome</div>
 </div>
 </section>
+<section class="trust-ribbon" aria-label="Why customers choose Vossome">
+  <span>★ 100+ perfect 5-star Google reviews</span>
+  <span>★ Third-generation window cleaners</span>
+  <span>★ Family owned and operated</span>
+  <span>★ Fully insured</span>
+</section>
+<section class="section promo-section">
+  <div class="promo-panel">
+    <div class="promo-copy">
+      <p class="eyebrow">Meet your window cleaners</p>
+      <h2>Hi! We’re Matt &amp; Julie.</h2>
+      <p class="lead">The family behind Vossome Window Cleaning.</p>
+      <p>For more than 10 years, we’ve cared for homes throughout the St. Louis area and built our business around happy clients, referrals, and reputation.</p>
+      <div class="owner-badge"><strong>Owners, not subcontractors.</strong><span>We do the work!</span></div>
+      <a class="button orange" href="{% url 'about' %}">Meet the Vossome family</a>
+    </div>
+    <div class="promo-character">
+      <img src="{% static 'images/postcard-cleaner.webp' %}" alt="Vossome window cleaner character">
+    </div>
+  </div>
+</section>
 <section class="section">
   <div class="section-heading"><p class="eyebrow">The Vossome lineup</p><h2>We make the outside<br>feel brand new.</h2><p class="lead">From a hard-working storefront to your favorite patio, our local crew handles the jobs that make your place shine.</p></div>
   <div class="service-grid">
@@ -28,6 +49,6 @@
   </div>
   <p><a class="button" href="{% url 'services' %}">View all services</a></p>
 </section>
-<section class="section"><div class="split"><div class="image-frame"><img src="{% static 'images/matt-voss.jpg' %}" alt="Matt Voss, owner of Vossome Window Cleaning"></div><div class="story"><p class="eyebrow">Start with why</p><h2>Small business.<br>Big heart.</h2><p>Vossome started with Matt Voss, a window washer who wanted to build a company the right way: show up, do excellent work, and help the community along the way.</p><p>That means treating your home like our own and giving back whenever we can. It is the Voss way. #likeaVoss</p><a class="button secondary" href="{% url 'about' %}">Meet the family</a></div></div></section>
+<section class="section"><div class="split"><div class="image-frame"><img src="{% static 'images/postcard-truck.webp' %}" alt="Vossome Window Cleaning service truck"></div><div class="story"><p class="eyebrow">Start with why</p><h2>Small business.<br>Big heart.</h2><p>Vossome started with Matt Voss, a window washer who wanted to build a company the right way: show up, do excellent work, and help the community along the way.</p><p>That means treating your home like our own and giving back whenever we can. It is the Voss way. #likeaVoss</p><a class="button secondary" href="{% url 'about' %}">Meet the family</a></div></div></section>
 <section class="section"><div class="section-heading"><p class="eyebrow">Local, reliable, ready</p><h2>Let’s make your place awesome.</h2><p class="lead">Tell us what needs a little Vossome attention. We’ll follow up with a clear quote and a plan that fits.</p><a class="button orange" href="{% url 'contact' %}">Start a conversation</a></div></section>
 {% endblock %}
