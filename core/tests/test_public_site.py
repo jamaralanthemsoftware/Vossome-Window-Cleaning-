@@ -65,7 +65,7 @@ class PublicSiteStructureTests(TestCase):
     def test_faq_page_shows_only_published_items(self):
         FAQ.objects.create(
             question="Published question?",
-            answer="Published answer.",
+            answer="<p>Published answer.</p>",
             is_published=True,
         )
         FAQ.objects.create(
@@ -78,6 +78,7 @@ class PublicSiteStructureTests(TestCase):
 
         self.assertContains(response, "Published question?")
         self.assertNotContains(response, "Draft question?")
+        self.assertNotContains(response, "&lt;p&gt;")
 
     def test_page_generates_search_and_open_graph_metadata_from_content(self):
         page = Page.objects.create(
@@ -122,3 +123,17 @@ class PublicSiteStructureTests(TestCase):
         self.assertContains(response, 'property="og:type" content="article"')
         self.assertContains(response, f'property="og:title" content="{page.open_graph_title}"')
         self.assertContains(response, 'property="og:image" content="http://testserver/')
+
+    def test_content_page_renders_structured_html_without_exposed_tags(self):
+        page = Page.objects.create(
+            title="Structured guidance",
+            slug="structured-guidance",
+            body="<h2>Useful heading</h2><p>Readable page information.</p>",
+            is_published=True,
+        )
+
+        response = self.client.get(page.get_absolute_url())
+
+        self.assertContains(response, "<h2>Useful heading</h2>", html=True)
+        self.assertContains(response, "<p>Readable page information.</p>", html=True)
+        self.assertNotContains(response, "&lt;p&gt;")
