@@ -92,6 +92,7 @@ class PublicSiteStructureTests(TestCase):
             response,
             'title="Map showing Vossome Window Cleaning in St. Charles, Missouri"',
         )
+        self.assertContains(response, 'width="100%" height="100%"')
         self.assertContains(response, 'loading="lazy"')
         self.assertContains(response, 'referrerpolicy="strict-origin-when-cross-origin"')
 
