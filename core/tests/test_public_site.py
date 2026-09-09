@@ -7,6 +7,33 @@ from core.models import FAQ, Page, Service
 
 
 class PublicSiteStructureTests(TestCase):
+    def test_public_pages_position_vossome_as_the_company_clients_hire(self):
+        home_response = self.client.get(reverse("home"))
+        services_response = self.client.get(reverse("services"))
+        about_response = self.client.get(reverse("about"))
+
+        self.assertContains(home_response, "We’re in the Happy Client Business")
+        self.assertContains(home_response, "The Vossome standard")
+        self.assertContains(services_response, "A consistent experience, every visit.")
+        self.assertContains(about_response, "Customers should know what to expect from Vossome")
+        self.assertNotContains(home_response, "Owners, not subcontractors")
+        self.assertNotContains(services_response, "Call or text Matt")
+
+    def test_public_pages_do_not_reference_generated_postcard_or_service_scenes(self):
+        for name in ["home", "services"]:
+            with self.subTest(name=name):
+                response = self.client.get(reverse(name))
+                self.assertNotContains(response, "postcard-")
+
+        for slug in [
+            "pressure-washing",
+            "gutter-cleaning",
+            "concrete-patio-cleaning",
+        ]:
+            service = Service.objects.get(slug=slug)
+            response = self.client.get(service.get_absolute_url())
+            self.assertNotContains(response, f"service-{slug}.jpg")
+
     @override_settings(ALLOWED_HOSTS=["vossome-window-cleaning.example"])
     def test_internal_platform_health_probe_bypasses_host_validation_only_for_healthz(self):
         health_response = self.client.get(

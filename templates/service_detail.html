@@ -19,14 +19,8 @@
 <section class="service-hero service-hero--{{ object.slug }}">
   {% if object.slug == "window-cleaning" %}
     <img src="{% static 'images/windows-exterior.jpg' %}" alt="Professionally cleaned windows on a St. Charles home">
-  {% elif object.slug == "pressure-washing" %}
-    <img src="{% static 'images/service-pressure-washing.jpg' %}" alt="Professional pressure washing on a residential property">
-  {% elif object.slug == "gutter-cleaning" %}
-    <img src="{% static 'images/service-gutter-cleaning.jpg' %}" alt="Professional gutter cleaning at a residential property">
-  {% elif object.slug == "concrete-patio-cleaning" %}
-    <img src="{% static 'images/service-concrete-patio-cleaning.jpg' %}" alt="Professional cleaning of a concrete patio">
   {% else %}
-    <img src="{% static 'images/water.jpg' %}" alt="">
+    <img src="{% static 'images/windows-exterior.jpg' %}" alt="A clean residential exterior in the St. Charles area">
   {% endif %}
   <div class="service-hero-shade"></div>
   <div class="service-hero-content">

@@ -4,36 +4,36 @@
 {% block open_graph_description %}{{ site_settings.default_open_graph_description|default:site_settings.default_meta_description|default:"" }}{% endblock %}
 {% block content %}
 <section class="hero"><div class="hero-inner">
-  <p class="eyebrow">Window cleaning · pressure washing · gutter care</p>
+  <p class="eyebrow">We’re in the Happy Client Business</p>
   <h1>{{ site_settings.tagline|default:"Clean windows. Big Voss energy." }}</h1>
-  <p class="lead">St. Charles’ family-owned crew for homes and businesses that deserve to look awesome. We bring the sparkle, you keep the view.</p>
+  <p class="lead">Vossome is the St. Charles exterior-cleaning company built around clear communication, dependable service, and work people are proud to recommend.</p>
   <div class="hero-actions"><a class="button orange" href="{% url 'contact' %}">Get your free quote</a><a class="button secondary" href="tel:13147751080">Call (314) 775-1080</a></div>
   <div class="hero-badge">#awesome<br>Vossome</div>
 </div>
 </section>
 <section class="trust-ribbon" aria-label="Why customers choose Vossome">
   <span>★ 100+ perfect 5-star Google reviews</span>
-  <span>★ Third-generation window cleaners</span>
-  <span>★ Family owned and operated</span>
+  <span>★ Clear communication</span>
+  <span>★ Local &amp; family owned</span>
   <span>★ Fully insured</span>
 </section>
 <section class="section promo-section">
   <div class="promo-panel">
     <div class="promo-copy">
-      <p class="eyebrow">Meet your window cleaners</p>
-      <h2>Hi! We’re Matt &amp; Julie.</h2>
-      <p class="lead">The family behind Vossome Window Cleaning.</p>
-      <p>For more than 10 years, we’ve cared for homes throughout the St. Louis area and built our business around happy clients, referrals, and reputation.</p>
-      <div class="owner-badge"><strong>Owners, not subcontractors.</strong><span>We do the work!</span></div>
-      <a class="button orange" href="{% url 'about' %}">Meet the Vossome family</a>
+      <p class="eyebrow">Where Vossome began</p>
+      <h2>A family story.<br>A company standard.</h2>
+      <p class="lead">Matt and Julie built Vossome around a simple idea: every part of the job should leave the client happy.</p>
+      <p>More than 10 years later, that idea guides the whole company—from the first call and clear quote to the care shown at your property and the final look at the work.</p>
+      <div class="standard-badge"><strong>Friendly. Reliable. Thorough.</strong><span>That’s the Vossome way.</span></div>
+      <a class="button orange" href="{% url 'about' %}">Read the Vossome story</a>
     </div>
-    <div class="promo-character">
-      <img src="{% static 'images/postcard-cleaner.webp' %}" alt="Vossome window cleaner character">
+    <div class="promo-photo">
+      <img src="{% static 'images/family.jpg' %}" alt="The Voss family">
     </div>
   </div>
 </section>
 <section class="section">
-  <div class="section-heading"><p class="eyebrow">The Vossome lineup</p><h2>We make the outside<br>feel brand new.</h2><p class="lead">From a hard-working storefront to your favorite patio, our local crew handles the jobs that make your place shine.</p></div>
+  <div class="section-heading"><p class="eyebrow">The Vossome lineup</p><h2>We make the outside<br>feel brand new.</h2><p class="lead">Every service comes with the same Vossome experience: straightforward communication, respect for your property, and a finish worth talking about.</p></div>
   <div class="service-grid">
   {% if services %}
     {% for service in services %}
@@ -49,6 +49,6 @@
   </div>
   <p><a class="button" href="{% url 'services' %}">View all services</a></p>
 </section>
-<section class="section"><div class="split"><div class="image-frame"><img src="{% static 'images/postcard-truck.webp' %}" alt="Vossome Window Cleaning service truck"></div><div class="story"><p class="eyebrow">Start with why</p><h2>Small business.<br>Big heart.</h2><p>Vossome started with Matt Voss, a window washer who wanted to build a company the right way: show up, do excellent work, and help the community along the way.</p><p>That means treating your home like our own and giving back whenever we can. It is the Voss way. #likeaVoss</p><a class="button secondary" href="{% url 'about' %}">Meet the family</a></div></div></section>
-<section class="section"><div class="section-heading"><p class="eyebrow">Local, reliable, ready</p><h2>Let’s make your place awesome.</h2><p class="lead">Tell us what needs a little Vossome attention. We’ll follow up with a clear quote and a plan that fits.</p><a class="button orange" href="{% url 'contact' %}">Start a conversation</a></div></section>
+<section class="section"><div class="split"><div class="image-frame"><img src="{% static 'images/windows-exterior.jpg' %}" alt="Clean windows on a St. Charles-area home"></div><div class="story"><p class="eyebrow">The Vossome standard</p><h2>Good work is only<br>part of the job.</h2><p>We show up prepared, communicate clearly, respect your property, and stand behind the experience attached to the Vossome name.</p><p>It is how a local family business becomes a company customers can count on—today and for years to come. That is doing business #likeaVoss.</p><a class="button secondary" href="{% url 'about' %}">How Vossome does business</a></div></div></section>
+<section class="section"><div class="section-heading"><p class="eyebrow">Local, reliable, ready</p><h2>Let’s make your place awesome.</h2><p class="lead">Tell Vossome what needs attention. You’ll get a clear next step, a straightforward quote, and a team focused on making you a happy client.</p><a class="button orange" href="{% url 'contact' %}">Start a conversation</a></div></section>
 {% endblock %}

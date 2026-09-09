@@ -19,18 +19,19 @@
 <section class="section">
   <div class="about-stack">
     <div class="image-frame about-photo">
-      <img src="{% static 'images/matt-voss.jpg' %}" alt="Matt Voss, owner of Vossome Window Cleaning">
+      <img src="{% static 'images/family.jpg' %}" alt="The Voss family, founders of Vossome Window Cleaning">
     </div>
     <article class="prose service-detail">
-      <p class="eyebrow">The people behind the sparkle</p>
-      <h1>{% if page %}{{ page.title }}{% else %}The Voss story{% endif %}</h1>
+      <p class="eyebrow">The story behind the standard</p>
+      <h1>{% if page %}{{ page.title }}{% else %}Built on family. Known for the Vossome way.{% endif %}</h1>
       {% if page %}
         {% if page.summary %}<p class="lead">{{ page.summary|striptags }}</p>{% endif %}
         {{ page.body|striptags|linebreaks }}
       {% else %}
-        <p class="lead">Vossome Window Cleaning is a family-owned St. Charles company run by Matt Voss. We started with a squeegee, a strong work ethic, and a simple belief: do the job right and leave people better than we found them.</p>
-        <p>We clean windows, wash away years of buildup, and keep gutters moving across St. Charles and nearby St. Louis communities. We also believe a local business should act local, which is why giving back to organizations like The Covering House remains part of our story.</p>
-        <p>Professional does not have to mean stuffy. Expect a friendly crew, clear communication, and a finish that feels unmistakably <strong>#awesomeVossome</strong>.</p>
+        <p class="lead">Vossome Window Cleaning is a locally owned St. Charles company founded by Matt Voss and shaped by family, three generations of window-cleaning experience, and one simple belief: we’re in the Happy Client Business.</p>
+        <p>That belief became the Vossome standard. It means clear communication, dependable service, respect for every property, and work the company is proud to put its name on. Customers should know what to expect from Vossome no matter who answers the phone or arrives for the job.</p>
+        <p>The family story explains where the company came from, while the way Vossome operates carries it forward. We clean windows, refresh exterior surfaces, and clear gutters throughout St. Charles and nearby St. Louis communities with a process designed to feel friendly, professional, and easy to recommend.</p>
+        <p>Being local also means contributing locally. Giving back to organizations like The Covering House is part of doing business <strong>#likeaVoss</strong>—and every clean, bright result should feel unmistakably <strong>#awesomeVossome</strong>.</p>
       {% endif %}
     </article>
   </div>

@@ -21,7 +21,7 @@
     <a class="button orange" href="{% url 'contact' %}">Get your exact quote</a>
   </div>
   <div class="service-art">
-    <img src="{% static 'images/postcard-services.webp' %}" alt="Illustrations for window cleaning, pressure washing, and gutter cleaning">
+    <img src="{% static 'images/windows-exterior.jpg' %}" alt="Clean windows on a local home">
   </div>
 </section>
 {% if services %}
@@ -37,13 +37,12 @@
 {% else %}
   <p class="empty-state">Our service menu is getting polished. Call (314) 775-1080 and we’ll talk through your project.</p>
 {% endif %}
-<section class="service-truck-banner">
-  <img src="{% static 'images/postcard-truck.webp' %}" alt="Vossome Window Cleaning service truck">
+<section class="service-standard-banner">
   <div>
-    <p class="eyebrow">Licensed &amp; fully insured</p>
-    <h2>Owners, not subcontractors.</h2>
-    <p>Matt and the Vossome family bring the same care, reputation, and bright attitude to every job.</p>
-    <a class="button secondary" href="tel:13147751080">Call or text Matt: (314) 775-1080</a>
+    <p class="eyebrow">The Vossome standard · fully insured</p>
+    <h2>A consistent experience, every visit.</h2>
+    <p>Clear communication before the job, respect for your property while the work is underway, and a result that reflects the reputation behind the Vossome name.</p>
+    <a class="button secondary" href="tel:13147751080">Call or text Vossome: (314) 775-1080</a>
   </div>
 </section>
 {% endblock %}
