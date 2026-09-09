@@ -18,7 +18,13 @@
 {% block content %}
 <section class="service-hero service-hero--{{ object.slug }}">
   {% if object.slug == "window-cleaning" %}
-    <img src="{% static 'images/windows-exterior.jpg' %}" alt="Professionally cleaned windows on a St. Charles home">
+    <img src="{% static 'images/service-window-cleaning.webp' %}" alt="Clean exterior windows on a well-kept residential home">
+  {% elif object.slug == "pressure-washing" %}
+    <img src="{% static 'images/service-pressure-washing.webp' %}" alt="Professional pressure washing on a residential driveway">
+  {% elif object.slug == "gutter-cleaning" %}
+    <img src="{% static 'images/service-gutter-cleaning.webp' %}" alt="Autumn leaves clogging a residential roof gutter">
+  {% elif object.slug == "concrete-patio-cleaning" %}
+    <img src="{% static 'images/service-concrete-patio-cleaning.webp' %}" alt="Concrete patio being pressure washed in warm evening light">
   {% else %}
     <img src="{% static 'images/windows-exterior.jpg' %}" alt="A clean residential exterior in the St. Charles area">
   {% endif %}

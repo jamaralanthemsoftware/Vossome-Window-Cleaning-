@@ -34,6 +34,35 @@ class PublicSiteStructureTests(TestCase):
             response = self.client.get(service.get_absolute_url())
             self.assertNotContains(response, f"service-{slug}.jpg")
 
+    def test_each_service_uses_its_matching_stock_hero(self):
+        expected_images = {
+            "window-cleaning": (
+                "service-window-cleaning.webp",
+                "Clean exterior windows on a well-kept residential home",
+            ),
+            "pressure-washing": (
+                "service-pressure-washing.webp",
+                "Professional pressure washing on a residential driveway",
+            ),
+            "gutter-cleaning": (
+                "service-gutter-cleaning.webp",
+                "Autumn leaves clogging a residential roof gutter",
+            ),
+            "concrete-patio-cleaning": (
+                "service-concrete-patio-cleaning.webp",
+                "Concrete patio being pressure washed in warm evening light",
+            ),
+        }
+
+        for slug, (image_name, alt_text) in expected_images.items():
+            with self.subTest(slug=slug):
+                service = Service.objects.get(slug=slug)
+                response = self.client.get(service.get_absolute_url())
+                image_stem, image_extension = image_name.rsplit(".", 1)
+                self.assertContains(response, f"/static/images/{image_stem}.")
+                self.assertContains(response, f".{image_extension}")
+                self.assertContains(response, f'alt="{alt_text}"')
+
     @override_settings(ALLOWED_HOSTS=["vossome-window-cleaning.example"])
     def test_internal_platform_health_probe_bypasses_host_validation_only_for_healthz(self):
         health_response = self.client.get(
