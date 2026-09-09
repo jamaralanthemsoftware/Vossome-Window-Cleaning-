@@ -84,6 +84,17 @@ class PublicSiteStructureTests(TestCase):
                 response = self.client.get(reverse(name))
                 self.assertEqual(response.status_code, 200)
 
+    def test_contact_page_embeds_the_vossome_google_map_accessibly(self):
+        response = self.client.get(reverse("contact"))
+
+        self.assertContains(response, "https://www.google.com/maps/embed?pb=")
+        self.assertContains(
+            response,
+            'title="Map showing Vossome Window Cleaning in St. Charles, Missouri"',
+        )
+        self.assertContains(response, 'loading="lazy"')
+        self.assertContains(response, 'referrerpolicy="strict-origin-when-cross-origin"')
+
     def test_header_and_footer_include_required_navigation(self):
         response = self.client.get(reverse("home"))
 
