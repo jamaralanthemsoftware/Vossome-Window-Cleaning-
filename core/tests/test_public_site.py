@@ -96,6 +96,16 @@ class PublicSiteStructureTests(TestCase):
         self.assertContains(response, 'loading="lazy"')
         self.assertContains(response, 'referrerpolicy="strict-origin-when-cross-origin"')
 
+    def test_contact_page_marks_up_the_business_postal_address(self):
+        response = self.client.get(reverse("contact"))
+
+        self.assertContains(response, 'itemtype="https://schema.org/LocalBusiness"')
+        self.assertContains(response, 'itemtype="https://schema.org/PostalAddress"')
+        self.assertContains(response, '<span itemprop="streetAddress">2745 McClay Rd</span>')
+        self.assertContains(response, '<span itemprop="addressLocality">St Charles</span>')
+        self.assertContains(response, '<span itemprop="addressRegion">MO</span>')
+        self.assertContains(response, '<span itemprop="postalCode">63303</span>')
+
     def test_header_and_footer_include_required_navigation(self):
         response = self.client.get(reverse("home"))
 

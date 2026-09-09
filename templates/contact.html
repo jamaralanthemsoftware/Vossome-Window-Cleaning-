@@ -7,7 +7,7 @@
 {% block twitter_description %}Contact {{ site_settings.site_name|default:"our team" }} to ask a question or discuss your needs.{% endblock %}
 {% block content %}
 <section class="page-heading"><p class="eyebrow">Let’s get Vossome</p><h1>Tell us what needs a shine.</h1><p class="lead">Reach out for a no-pressure quote. We’ll get back to you with a clear plan.</p></section>
-<section class="contact-layout"><aside class="contact-card"><p class="eyebrow">Prefer to talk?</p><h2>Call Matt’s crew.</h2><p>We’re proud to serve St. Charles and nearby St. Louis communities.</p><p><a href="tel:13147751080">(314) 775-1080</a></p><p>Family-owned. Community-minded. Always ready to make it awesome.</p></aside><form method="post">
+<section class="contact-layout"><aside class="contact-card" itemscope itemtype="https://schema.org/LocalBusiness"><meta itemprop="name" content="Vossome Window Cleaning"><p class="eyebrow">Prefer to talk?</p><h2>Call Matt’s crew.</h2><p>We’re proud to serve St. Charles and nearby St. Louis communities.</p><p><a itemprop="telephone" href="tel:13147751080">(314) 775-1080</a></p><address itemprop="address" itemscope itemtype="https://schema.org/PostalAddress"><span itemprop="streetAddress">2745 McClay Rd</span><br><span itemprop="addressLocality">St Charles</span>, <span itemprop="addressRegion">MO</span> <span itemprop="postalCode">63303</span></address><p>Family-owned. Community-minded. Always ready to make it awesome.</p></aside><form method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <button class="button orange" type="submit">Send my message</button>
