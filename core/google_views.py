@@ -106,40 +106,6 @@ def connect(request):
 @superuser_required
 @require_GET
 def callback(request):
-    provisioning = request.session.get("google_account_provisioning") or {}
-    if provisioning and not request.GET.get("code") and request.GET.get("state"):
-        state = request.GET["state"]
-        if not secrets.compare_digest(state, provisioning.get("state", "")):
-            return HttpResponse("Invalid provisioning state.", status=400)
-        if timezone.now().timestamp() - provisioning.get("created_at", 0) > 600:
-            request.session.pop("google_account_provisioning", None)
-            return HttpResponse("Provisioning state expired.", status=400)
-        request.session.pop("google_account_provisioning", None)
-        account_id = request.GET.get("accountId", "").strip()
-        record = integration()
-        if record and account_id.isdigit():
-            try:
-                valid = {
-                    item.get("name", "").rsplit("/", 1)[-1]
-                    for item in GoogleClient(
-                        decrypt_refresh_token(record.refresh_token_encrypted)
-                    ).accounts()
-                }
-            except GoogleIntegrationError as exc:
-                return HttpResponse(str(exc), status=502)
-            if account_id not in valid:
-                return HttpResponse("Google did not return the provisioned account.", status=400)
-            record.analytics_account_id = account_id
-            record.save(
-                update_fields=["analytics_account_id", "updated_at"]
-            )
-        messages.success(
-            request,
-            "Returned from Google Analytics account creation. "
-            "Select the new account below to finish GA4 setup.",
-        )
-        return redirect("google-integration-dashboard")
-
     saved = request.session.get("google_integration_oauth") or {}
     state = request.GET.get("state", "")
     if not saved or not state or not secrets.compare_digest(state, saved.get("state", "")):
@@ -181,6 +147,41 @@ def callback(request):
 
 
 @superuser_required
+@require_GET
+def provisioning_callback(request, state):
+    saved = request.session.get("google_account_provisioning") or {}
+    if not saved or not secrets.compare_digest(state, saved.get("state", "")):
+        return HttpResponse("Invalid provisioning state.", status=400)
+    if timezone.now().timestamp() - saved.get("created_at", 0) > 600:
+        request.session.pop("google_account_provisioning", None)
+        return HttpResponse("Provisioning state expired.", status=400)
+    request.session.pop("google_account_provisioning", None)
+    account_id = request.GET.get("accountId", "").strip()
+    record = integration()
+    if not record or not account_id.isdigit():
+        return HttpResponse("Google did not return a valid account.", status=400)
+    try:
+        valid = {
+            item.get("name", "").rsplit("/", 1)[-1]
+            for item in GoogleClient(
+                decrypt_refresh_token(record.refresh_token_encrypted)
+            ).accounts()
+        }
+    except GoogleIntegrationError as exc:
+        return HttpResponse(str(exc), status=502)
+    if account_id not in valid:
+        return HttpResponse("Google did not return the provisioned account.", status=400)
+    record.analytics_account_id = account_id
+    record.save(update_fields=["analytics_account_id", "updated_at"])
+    messages.success(
+        request,
+        "Returned from Google Analytics account creation. "
+        "Select the new account below to finish GA4 setup.",
+    )
+    return redirect("google-integration-dashboard")
+
+
+@superuser_required
 @require_POST
 def disconnect(request):
     record = integration()
@@ -218,8 +219,8 @@ def ga4_create_account(request):
     _record, client = _client()
     provisioning_state = secrets.token_urlsafe(32)
     callback_uri = (
-        f"{settings.GOOGLE_INTEGRATION_CALLBACK_URI}?state="
-        f"{urllib.parse.quote(provisioning_state, safe='')}"
+        f"{settings.SITE_URL}/integrations/google/provisioning-callback/"
+        f"{urllib.parse.quote(provisioning_state, safe='')}/"
     )
     try:
         result = client.provision_account_ticket(
@@ -241,7 +242,7 @@ def ga4_create_account(request):
     safe_ticket = urllib.parse.quote(ticket, safe="")
     return redirect(
         "https://analytics.google.com/analytics/web/"
-        f"?provisioningSignup=false&state={urllib.parse.quote(provisioning_state, safe='')}"
+        f"?provisioningSignup=false"
         f"#/termsofservice/{safe_ticket}"
     )
 

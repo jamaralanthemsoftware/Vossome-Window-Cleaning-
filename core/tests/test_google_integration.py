@@ -192,7 +192,7 @@ class GoogleIntegrationTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertIn(
-            "https://analytics.google.com/analytics/web/?provisioningSignup=false&state=",
+            "https://analytics.google.com/analytics/web/?provisioningSignup=false",
             response.url,
         )
         self.assertIn("#/termsofservice/ticket%2Fwith%20spaces", response.url)
@@ -200,12 +200,16 @@ class GoogleIntegrationTests(TestCase):
         self.assertTrue(provisioning["state"])
         self.assertIn("created_at", provisioning)
         client_class.return_value.provision_account_ticket.assert_called_once_with(
-            f"{settings.GOOGLE_INTEGRATION_CALLBACK_URI}?state={urllib.parse.quote(provisioning['state'], safe='')}"
+            f"{settings.SITE_URL}/integrations/google/provisioning-callback/"
+            f"{urllib.parse.quote(provisioning['state'], safe='')}/"
         )
 
         response = self.client.get(
-            reverse("google-integration-callback"),
-            {"state": provisioning["state"], "accountId": "123"},
+            reverse(
+                "google-integration-provisioning-callback",
+                kwargs={"state": provisioning["state"]},
+            ),
+            {"accountId": "123", "accountTicketId": "ticket/with spaces"},
         )
         self.assertRedirects(
             response,
@@ -244,13 +248,15 @@ class GoogleIntegrationTests(TestCase):
         self.client.post(reverse("google-integration-ga4-create-account"))
         state = self.client.session["google_account_provisioning"]["state"]
         response = self.client.get(
-            reverse("google-integration-callback"), {"state": state, "accountId": "999"}
+            reverse("google-integration-provisioning-callback", kwargs={"state": state}),
+            {"accountId": "999"},
         )
         self.assertEqual(response.status_code, 400)
         self.assertNotIn("google_account_provisioning", self.client.session)
         self.assertEqual(
             self.client.get(
-                reverse("google-integration-callback"), {"state": state, "accountId": "999"}
+                reverse("google-integration-provisioning-callback", kwargs={"state": state}),
+                {"accountId": "999"},
             ).status_code,
             400,
         )
