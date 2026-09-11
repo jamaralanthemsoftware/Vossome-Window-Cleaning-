@@ -6,8 +6,7 @@ from django.db import migrations, models
 def populate_submission_tokens(apps, schema_editor):
     Lead = apps.get_model("core", "Lead")
     for lead in Lead.objects.filter(submission_token__isnull=True).iterator():
-        lead.submission_token = uuid.uuid4()
-        lead.save(update_fields=["submission_token"])
+        Lead.objects.filter(pk=lead.pk).update(submission_token=uuid.uuid4())
 
 
 class Migration(migrations.Migration):
@@ -17,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="lead",
             name="submission_token",
-            field=models.UUIDField(blank=True, editable=False, null=True),
+            field=models.UUIDField(editable=False, null=True),
         ),
         migrations.RunPython(
             populate_submission_tokens,
