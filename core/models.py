@@ -195,14 +195,26 @@ class FAQ(TimeStampedModel):
 
 
 class Lead(TimeStampedModel):
+    class ServiceInterest(models.TextChoices):
+        WINDOW_CLEANING = "window-cleaning", "Window Cleaning"
+        PRESSURE_WASHING = "pressure-washing", "Pressure Washing"
+        GUTTER_CLEANING = "gutter-cleaning", "Gutter Cleaning"
+        CONCRETE_PATIO_CLEANING = "concrete-patio-cleaning", "Concrete Patio Cleaning"
+
     class Status(models.TextChoices):
         NEW = "new", "New"
         CONTACTED = "contacted", "Contacted"
         CLOSED = "closed", "Closed"
 
-    name = models.CharField(max_length=120)
+    first_name = models.CharField(max_length=60)
+    last_name = models.CharField(max_length=60)
     email = models.EmailField()
     phone = models.CharField(max_length=40, blank=True)
+    service_interest = models.CharField(
+        max_length=40,
+        choices=ServiceInterest.choices,
+        blank=True,
+    )
     message = models.TextField()
     source = models.CharField(max_length=120, blank=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.NEW)
@@ -211,8 +223,12 @@ class Lead(TimeStampedModel):
     class Meta:
         ordering = ["-created_at"]
 
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}".strip()
+
     def __str__(self):
-        return f"{self.name} ({self.email})"
+        return f"{self.full_name} ({self.email})"
 
 
 class DownloadableAsset(TimeStampedModel):

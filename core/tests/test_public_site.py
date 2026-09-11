@@ -119,9 +119,11 @@ class PublicSiteStructureTests(TestCase):
         response = self.client.post(
             reverse("contact"),
             {
-                "name": "Happy Client",
+                "first_name": "Happy",
+                "last_name": "Client",
                 "email": "client@example.com",
                 "phone": "(314) 555-0100",
+                "service_interest": "window-cleaning",
                 "message": "Please send me a quote.",
                 "consent_to_contact": "on",
             },
@@ -137,6 +139,7 @@ class PublicSiteStructureTests(TestCase):
         self.assertEqual(notification.reply_to, ["client@example.com"])
         self.assertIn("Happy Client", notification.subject)
         self.assertIn("(314) 555-0100", notification.body)
+        self.assertIn("Service: Window Cleaning", notification.body)
         self.assertIn("Please send me a quote.", notification.body)
 
     @override_settings(LEAD_NOTIFICATION_EMAIL="vossomewindowcleaning@gmail.com")
@@ -145,8 +148,10 @@ class PublicSiteStructureTests(TestCase):
         response = self.client.post(
             reverse("contact"),
             {
-                "name": "Saved Client",
+                "first_name": "Saved",
+                "last_name": "Client",
                 "email": "saved@example.com",
+                "service_interest": "gutter-cleaning",
                 "message": "Keep this lead even if email fails.",
                 "consent_to_contact": "on",
             },
@@ -155,6 +160,35 @@ class PublicSiteStructureTests(TestCase):
         self.assertRedirects(response, reverse("contact"))
         self.assertTrue(Lead.objects.filter(email="saved@example.com").exists())
         send.assert_called_once()
+
+    def test_contact_form_requires_separate_names_and_service_interest(self):
+        response = self.client.get(reverse("contact"))
+
+        self.assertContains(response, 'name="first_name"')
+        self.assertContains(response, 'name="last_name"')
+        self.assertContains(response, 'name="service_interest"')
+        for label in [
+            "Window Cleaning",
+            "Pressure Washing",
+            "Gutter Cleaning",
+            "Concrete Patio Cleaning",
+        ]:
+            self.assertContains(response, label)
+
+        invalid = self.client.post(
+            reverse("contact"),
+            {
+                "first_name": "Missing",
+                "last_name": "Service",
+                "email": "missing-service@example.com",
+                "message": "No service selected.",
+                "consent_to_contact": "on",
+            },
+        )
+        self.assertEqual(invalid.status_code, 200)
+        self.assertFalse(
+            Lead.objects.filter(email="missing-service@example.com").exists()
+        )
 
     def test_header_and_footer_include_required_navigation(self):
         response = self.client.get(reverse("home"))

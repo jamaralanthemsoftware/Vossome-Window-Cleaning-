@@ -549,9 +549,11 @@ class GoogleIntegrationTests(TestCase):
         response = self.client.post(
             reverse("contact"),
             {
-                "name": "Vossome customer",
+                "first_name": "Vossome",
+                "last_name": "Customer",
                 "email": "customer@example.com",
                 "phone": "3145550100",
+                "service_interest": "window-cleaning",
                 "message": "Please quote our windows.",
                 "consent_to_contact": "on",
             },

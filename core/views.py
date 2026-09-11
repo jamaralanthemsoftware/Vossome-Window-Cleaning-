@@ -24,9 +24,11 @@ def send_lead_notification(lead):
         [
             "A new contact-form lead was submitted on the Vossome website.",
             "",
-            f"Name: {lead.name}",
+            f"First name: {lead.first_name}",
+            f"Last name: {lead.last_name}",
             f"Email: {lead.email}",
             f"Phone: {lead.phone or 'Not provided'}",
+            f"Service: {lead.get_service_interest_display() or 'Not specified'}",
             f"Consent to contact: {consent}",
             f"Source: {lead.source or 'website'}",
             "",
@@ -35,7 +37,7 @@ def send_lead_notification(lead):
         ]
     )
     message = EmailMessage(
-        subject=f"New Vossome website lead: {lead.name}",
+        subject=f"New Vossome {lead.get_service_interest_display() or 'website'} lead: {lead.full_name}",
         body=body,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[settings.LEAD_NOTIFICATION_EMAIL],

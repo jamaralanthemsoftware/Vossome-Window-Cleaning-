@@ -8,10 +8,22 @@
 {% block twitter_description %}Contact {{ site_settings.site_name|default:"our team" }} to ask a question or discuss your needs.{% endblock %}
 {% block content %}
 <section class="page-heading"><p class="eyebrow">Let’s get Vossome</p><h1>Tell us what needs a shine.</h1><p class="lead">Reach out for a no-pressure quote. We’ll get back to you with a clear plan.</p></section>
-<section class="contact-layout"><aside class="contact-card" itemscope itemtype="https://schema.org/LocalBusiness"><meta itemprop="name" content="Vossome Window Cleaning"><p class="eyebrow">Prefer to talk?</p><h2>Call Matt’s crew.</h2><p>We’re proud to serve St. Charles and nearby St. Louis communities.</p><p><a itemprop="telephone" href="tel:13147751080">(314) 775-1080</a></p><address itemprop="address" itemscope itemtype="https://schema.org/PostalAddress"><span itemprop="streetAddress">2745 McClay Rd</span><br><span itemprop="addressLocality">St Charles</span>, <span itemprop="addressRegion">MO</span> <span itemprop="postalCode">63303</span></address><p>Family-owned. Community-minded. Always ready to make it awesome.</p></aside><form method="post">
+<section class="contact-layout"><aside class="contact-card" itemscope itemtype="https://schema.org/LocalBusiness"><meta itemprop="name" content="Vossome Window Cleaning"><p class="eyebrow">Prefer to talk?</p><h2>Call or text the Voss.</h2><p>We’re proud to serve St. Charles and nearby St. Louis communities.</p><div class="contact-quick-actions"><a class="button orange" itemprop="telephone" href="tel:+13147751080">Call us</a><a class="button contact-text-button" href="sms:+13147751080">Text us</a></div><address itemprop="address" itemscope itemtype="https://schema.org/PostalAddress"><span itemprop="streetAddress">2745 McClay Rd</span><br><span itemprop="addressLocality">St Charles</span>, <span itemprop="addressRegion">MO</span> <span itemprop="postalCode">63303</span></address><p>Family-owned. Community-minded. Always ready to make it awesome.</p></aside><form class="contact-form" method="post">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button class="button orange" type="submit">Send my message</button>
+    <div class="contact-form-heading"><p class="eyebrow">Get a free quote</p><h2>Let’s make your place shine.</h2><p>Share a few details and the Vossome team will follow up with a clear next step.</p></div>
+    {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+    {{ form.website }}
+    <div class="form-grid">
+      <div class="form-field">{{ form.first_name.label_tag }}{{ form.first_name }}{{ form.first_name.errors }}</div>
+      <div class="form-field">{{ form.last_name.label_tag }}{{ form.last_name }}{{ form.last_name.errors }}</div>
+      <div class="form-field">{{ form.email.label_tag }}{{ form.email }}{{ form.email.errors }}</div>
+      <div class="form-field">{{ form.phone.label_tag }}{{ form.phone }}{{ form.phone.errors }}</div>
+      <div class="form-field form-field--wide">{{ form.service_interest.label_tag }}{{ form.service_interest }}{{ form.service_interest.errors }}</div>
+      <div class="form-field form-field--wide">{{ form.message.label_tag }}{{ form.message }}{{ form.message.errors }}</div>
+      <div class="form-field form-field--wide consent-field">{{ form.consent_to_contact }}{{ form.consent_to_contact.label_tag }}{{ form.consent_to_contact.errors }}</div>
+    </div>
+    <button class="button orange contact-submit" type="submit">Request my free quote</button>
+    <p class="form-assurance">No pressure. Just a clear response from a local team.</p>
   </form>
 </section>
 <section class="contact-map" aria-labelledby="contact-map-heading">

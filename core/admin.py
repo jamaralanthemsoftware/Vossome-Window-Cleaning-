@@ -127,10 +127,21 @@ class FAQAdmin(admin.ModelAdmin):
 
 @admin.register(Lead)
 class LeadAdmin(admin.ModelAdmin):
-    list_display = ["name", "email", "status", "source", "created_at"]
-    list_filter = ["status", "consent_to_contact", "created_at"]
-    search_fields = ["name", "email", "phone", "message"]
+    list_display = [
+        "full_name",
+        "service_interest",
+        "email",
+        "status",
+        "source",
+        "created_at",
+    ]
+    list_filter = ["service_interest", "status", "consent_to_contact", "created_at"]
+    search_fields = ["first_name", "last_name", "email", "phone", "message"]
     readonly_fields = ["created_at", "updated_at"]
+
+    @admin.display(description="Name", ordering="last_name")
+    def full_name(self, obj):
+        return obj.full_name
 
 
 @admin.register(DownloadableAsset)
