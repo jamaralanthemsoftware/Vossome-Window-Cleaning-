@@ -8,6 +8,6 @@
     {% for page in navigation_pages %}
       <a href="{{ page.get_absolute_url }}">{{ page.title }}</a>
     {% endfor %}
-    <a class="nav-cta" href="{% url 'contact' %}">Get a free quote</a>
+    <a class="nav-cta" data-cta-location="header" href="{% url 'contact' %}">Get a free quote</a>
   </nav>
 </header></div>

@@ -1,4 +1,7 @@
+import re
+
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.db import models
 from django.urls import reverse
 from django.utils.html import strip_tags
@@ -27,7 +30,18 @@ class SiteSettings(TimeStampedModel):
         blank=True,
     )
     footer_disclaimer = models.TextField(blank=True)
-    analytics_measurement_id = models.CharField(max_length=50, blank=True)
+    analytics_measurement_id = models.CharField(
+        max_length=50, blank=True,
+        validators=[RegexValidator(r"^$|^G-[A-Za-z0-9]+$", "Enter a valid GA4 measurement ID.")],
+    )
+    search_console_verification_token = models.CharField(
+        max_length=255, blank=True,
+        validators=[RegexValidator(r"^$|^[A-Za-z0-9_-]+$", "Enter a valid Google Search Console verification token.")],
+    )
+
+    @property
+    def valid_analytics_measurement_id(self):
+        return bool(self.analytics_measurement_id and re.fullmatch(r"G-[A-Za-z0-9]+", self.analytics_measurement_id))
 
     class Meta:
         verbose_name_plural = "site settings"
@@ -38,6 +52,36 @@ class SiteSettings(TimeStampedModel):
 
     def __str__(self):
         return self.site_name
+
+
+class GoogleIntegration(TimeStampedModel):
+    singleton_key = models.CharField(max_length=20, unique=True, default="default", editable=False)
+    google_subject = models.CharField(max_length=255, blank=True)
+    connected_email = models.EmailField(blank=True)
+    email_verified = models.BooleanField(default=False)
+    refresh_token_encrypted = models.TextField(blank=True)
+    analytics_account_id = models.CharField(max_length=120, blank=True)
+    analytics_property_id = models.CharField(max_length=120, blank=True)
+    analytics_data_stream_id = models.CharField(max_length=120, blank=True)
+    analytics_measurement_id = models.CharField(
+        max_length=50, blank=True,
+        validators=[RegexValidator(r"^$|^G-[A-Za-z0-9]+$", "Enter a valid GA4 measurement ID.")],
+    )
+    gsc_verification_token = models.CharField(max_length=255, blank=True)
+    gsc_verified_at = models.DateTimeField(null=True, blank=True)
+    gsc_property_added_at = models.DateTimeField(null=True, blank=True)
+    gsc_sitemap_submitted_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Google integration"
+        verbose_name_plural = "Google integration"
+
+    def clean(self):
+        if self.pk is None and GoogleIntegration.objects.exists():
+            raise ValidationError("Only one GoogleIntegration record is allowed.")
+
+    def __str__(self):
+        return self.connected_email or "Google integration"
 
 
 class PublishableModel(TimeStampedModel):

@@ -3,6 +3,7 @@
 {% block meta_description %}Contact {{ site_settings.site_name|default:"our team" }} to ask a question or discuss your needs.{% endblock %}
 {% block open_graph_title %}Contact us | {{ site_settings.site_name|default:"Client Website" }}{% endblock %}
 {% block open_graph_description %}Contact {{ site_settings.site_name|default:"our team" }} to ask a question or discuss your needs.{% endblock %}
+{% block body_attributes %}{% if contact_submitted %} data-contact-submitted="true"{% endif %}{% endblock %}
 {% block twitter_title %}Contact us | {{ site_settings.site_name|default:"Client Website" }}{% endblock %}
 {% block twitter_description %}Contact {{ site_settings.site_name|default:"our team" }} to ask a question or discuss your needs.{% endblock %}
 {% block content %}

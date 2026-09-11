@@ -1,0 +1,59 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Google Services</h1>
+{% if error %}<p class="errornote">{{ error }}</p>{% endif %}
+{% if integration and integration.connected_email %}
+<p>Connected as {{ integration.connected_email }}</p>
+<form method="post" action="{% url 'google-integration-disconnect' %}">{% csrf_token %}<button type="submit">Disconnect</button></form>
+<h2>Analytics accounts</h2>
+{% if ga4_configured %}
+<p><strong>GA4 is configured.</strong></p>
+<dl>
+  <dt>Analytics account</dt>
+  <dd>{{ selected_account.displayName|default:"Selected account" }} (accounts/{{ integration.analytics_account_id }})</dd>
+  <dt>Property ID</dt>
+  <dd>{{ integration.analytics_property_id }}</dd>
+  <dt>Measurement ID</dt>
+  <dd><code>{{ integration.analytics_measurement_id }}</code></dd>
+  <dt>Managed key events</dt>
+  <dd><ul>{% for event in ga4_key_events %}<li><code>{{ event }}</code></li>{% endfor %}</ul></dd>
+</dl>
+<p>The Analytics account is locked. Disconnect Google Services before choosing a different account.</p>
+{% else %}
+<p>Create a dedicated Google Analytics account for Vossome Window Cleaning, or use an existing account below.</p>
+<form method="post" action="{% url 'google-integration-ga4-create-account' %}">
+{% csrf_token %}
+<button type="submit">Create a new Analytics account</button>
+</form>
+{% if accounts %}<ul>{% for account in accounts %}<li>{{ account.displayName }} ({{ account.name }})</li>{% endfor %}</ul>{% else %}<p>No Analytics accounts found.</p>{% endif %}
+<form method="post" action="{% url 'google-integration-ga4-setup' %}">{% csrf_token %}
+<label>Analytics account <select name="account_id" required {% if not accounts %}disabled{% endif %}>{% for account in accounts %}<option value="{{ account.name }}"{% if integration.analytics_account_id and account.name == "accounts/"|add:integration.analytics_account_id %} selected{% endif %}>{{ account.displayName|default:account.name }}</option>{% endfor %}</select></label><button type="submit" {% if not accounts %}disabled{% endif %}>Set up GA4</button></form>
+{% if integration.analytics_account_id %}<p>Setup will continue only with accounts/{{ integration.analytics_account_id }}.</p>{% endif %}
+{% endif %}
+<h2>Search Console</h2>
+{% if integration.gsc_verified_at %}
+<p><strong>Search Console is verified.</strong></p>
+<dl>
+  <dt>Property</dt>
+  <dd>{{ site_url }}/</dd>
+  <dt>Verification method</dt>
+  <dd>HTML meta tag</dd>
+  <dt>Sitemap</dt>
+  <dd>{{ site_url }}/sitemap.xml{% if integration.gsc_sitemap_submitted_at %} (submitted){% endif %}</dd>
+</dl>
+{% else %}
+<p>Authorize an HTML verification code and install it automatically in the website head.</p>
+{% if integration.gsc_verification_token %}
+<p><strong>The verification meta tag is installed.</strong></p>
+<p><code>&lt;meta name="google-site-verification" content="{{ integration.gsc_verification_token }}"&gt;</code></p>
+{% else %}
+<form method="post" action="{% url 'google-integration-gsc-token' %}">{% csrf_token %}<button type="submit">Get and install verification code</button></form>
+{% endif %}
+<form method="post" action="{% url 'google-integration-gsc-verify' %}">{% csrf_token %}<button type="submit" {% if not integration.gsc_verification_token %}disabled{% endif %}>Verify Search Console and submit sitemap</button></form>
+{% endif %}
+{% else %}
+<p>Connect a Google identity to authorize setup. You do not need an existing Google Analytics account.</p>
+<a href="{% url 'google-integration-connect' %}" class="button">Connect Google to continue</a>
+<p>After authorization, you can create a new Analytics account for Vossome Window Cleaning or use an existing one.</p>
+{% endif %}
+{% endblock %}

@@ -71,5 +71,6 @@ def contact(request):
         lead.source = request.POST.get("source", "website")[:120]
         lead.save()
         messages.success(request, "Thank you. Your message has been received.")
+        request.session["contact_submitted"] = True
         return redirect("contact")
-    return render(request, "contact.html", {"form": form})
+    return render(request, "contact.html", {"form": form, "contact_submitted": request.session.pop("contact_submitted", False)})

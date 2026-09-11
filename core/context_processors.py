@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from .models import Page, SiteSettings
 
 
@@ -10,4 +12,5 @@ def site_settings(request):
     return {
         "site_settings": settings_record,
         "navigation_pages": navigation_pages,
+        "site_url": settings.SITE_URL,
     }

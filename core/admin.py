@@ -1,6 +1,32 @@
 from django.contrib import admin
+from django.shortcuts import redirect
 
-from .models import DownloadableAsset, FAQ, Lead, Page, Service, SiteSettings
+from .models import DownloadableAsset, FAQ, GoogleIntegration, Lead, Page, Service, SiteSettings
+
+
+@admin.register(GoogleIntegration)
+class GoogleIntegrationAdmin(admin.ModelAdmin):
+    list_display = ["connected_email", "analytics_property_id", "gsc_verified_at", "updated_at"]
+    readonly_fields = [field.name for field in GoogleIntegration._meta.fields if field.name != "refresh_token_encrypted"]
+    exclude = ["refresh_token_encrypted"]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_module_permission(self, request):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        return redirect("google-integration-dashboard")
 
 
 @admin.register(SiteSettings)
@@ -17,6 +43,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
                     "default_open_graph_description",
                     "default_open_graph_image",
                     "analytics_measurement_id",
+                    "search_console_verification_token",
                 ]
             },
         ),

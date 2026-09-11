@@ -21,6 +21,7 @@ urlpatterns = [
     ),
     path(settings.ADMIN_URL, admin.site.urls),
     path("accounts/", include("allauth.urls")),
+    path("integrations/google/", include("core.google_urls")),
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="sitemap"),
     path("", include("core.urls")),
 ]

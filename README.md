@@ -1,3 +1,18 @@
+## Google Services integration
+
+Superusers can open **Google integration** in Django admin to connect Vossome
+Window Cleaning's Google account, provision GA4 and its key events, and verify
+the canonical site in Search Console. Service integration OAuth is deliberately
+separate from admin SSO: configure `GOOGLE_INTEGRATIONS_CLIENT_ID`,
+`GOOGLE_INTEGRATIONS_CLIENT_SECRET`, and a generated Fernet
+`GOOGLE_INTEGRATION_ENCRYPTION_KEY`. The callback is
+`SITE_URL/integrations/google/callback/`. Refresh tokens are encrypted at rest
+and never displayed. Set `ENABLE_GOOGLE_SERVICES_INTEGRATION=true` and
+`GOOGLE_INTEGRATION_ALLOWED_EMAILS` (a normalized comma-separated owner
+allowlist) in production. `booking_completed` is reserved for parity because
+Vossome has no booking flow; it is registered in GA4 but never emitted by the
+browser. Consent mode is a follow-up because this site has no consent
+framework. Do not put credentials in this repository.
 # Vossome Window Cleaning
 
 Client-facing build for Vossome Window Cleaning, a family-owned St. Charles window cleaning

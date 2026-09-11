@@ -32,6 +32,22 @@ if ENABLE_GOOGLE_ADMIN_SSO:  # noqa: F405
             "Google admin SSO requires at least one ADMIN_GOOGLE_ALLOWED_EMAILS value."
         )
 
+if ENABLE_GOOGLE_SERVICES_INTEGRATION:  # noqa: F405
+    if not SITE_URL.startswith("https://"):  # noqa: F405
+        raise ImproperlyConfigured("Google services integration requires an HTTPS SITE_URL.")
+    required = (
+        GOOGLE_INTEGRATIONS_CLIENT_ID, GOOGLE_INTEGRATIONS_CLIENT_SECRET,
+        GOOGLE_INTEGRATION_ENCRYPTION_KEY,
+    )
+    if any(not value for value in required):
+        raise ImproperlyConfigured(
+            "Google services integration requires its client ID, client secret, and Fernet key."
+        )
+    if not GOOGLE_INTEGRATION_ALLOWED_EMAILS:  # noqa: F405
+        raise ImproperlyConfigured(
+            "Google services integration requires GOOGLE_INTEGRATION_ALLOWED_EMAILS."
+        )
+
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
