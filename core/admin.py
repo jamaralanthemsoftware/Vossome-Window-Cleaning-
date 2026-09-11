@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import admin
 from django.shortcuts import redirect
 
@@ -8,6 +9,7 @@ from .models import (
     GoogleIntegration,
     Lead,
     Page,
+    RecaptchaIntegration,
     Service,
     SiteSettings,
 )
@@ -46,6 +48,48 @@ class AnthemIntegrationAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return request.user.is_superuser and not AnthemIntegration.objects.exists()
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_module_permission(self, request):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(RecaptchaIntegration)
+class RecaptchaIntegrationAdmin(admin.ModelAdmin):
+    list_display = [
+        "site_key",
+        "minimum_score",
+        "is_enabled",
+        "secret_configured",
+        "updated_at",
+    ]
+    fields = [
+        "site_key",
+        "minimum_score",
+        "allowed_hostnames",
+        "is_enabled",
+        "secret_configured",
+        "updated_at",
+    ]
+    readonly_fields = ["secret_configured", "updated_at"]
+
+    @admin.display(boolean=True, description="Encrypted secret configured")
+    def secret_configured(self, obj=None):
+        return bool(settings.RECAPTCHA_SECRET_KEY)
+
+    def has_add_permission(self, request):
+        return (
+            request.user.is_superuser
+            and not RecaptchaIntegration.objects.exists()
+        )
 
     def has_view_permission(self, request, obj=None):
         return request.user.is_superuser

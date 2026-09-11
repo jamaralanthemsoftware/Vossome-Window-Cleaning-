@@ -4,18 +4,20 @@ from unittest.mock import patch
 
 from django.test import SimpleTestCase, override_settings
 
-from core.recaptcha import verify_contact_recaptcha
+from core.recaptcha import RecaptchaConfig, verify_contact_recaptcha
 
 
 RECAPTCHA_SETTINGS = {
     "ENABLE_RECAPTCHA": True,
     "RECAPTCHA_SECRET_KEY": "test-secret",
-    "RECAPTCHA_MIN_SCORE": 0.5,
-    "RECAPTCHA_ALLOWED_HOSTNAMES": {
-        "vossomewindowcleaning.com",
-        "www.vossomewindowcleaning.com",
-    },
 }
+CONFIG = RecaptchaConfig(
+    site_key="test-site-key",
+    minimum_score=0.5,
+    allowed_hostnames=frozenset(
+        {"vossomewindowcleaning.com", "www.vossomewindowcleaning.com"}
+    ),
+)
 
 
 @override_settings(**RECAPTCHA_SETTINGS)
@@ -40,7 +42,7 @@ class RecaptchaVerificationTests(SimpleTestCase):
             },
         )
 
-        self.assertTrue(verify_contact_recaptcha("browser-token"))
+        self.assertTrue(verify_contact_recaptcha("browser-token", CONFIG))
 
         connection.request.assert_called_once()
         self.assertEqual(connection.request.call_args.args[:2], ("POST", "/recaptcha/api/siteverify"))
@@ -60,7 +62,7 @@ class RecaptchaVerificationTests(SimpleTestCase):
             },
         )
 
-        self.assertFalse(verify_contact_recaptcha("browser-token"))
+        self.assertFalse(verify_contact_recaptcha("browser-token", CONFIG))
 
     @patch("core.recaptcha.http.client.HTTPSConnection")
     def test_non_finite_or_out_of_range_score_is_rejected(self, connection_class):
@@ -75,7 +77,7 @@ class RecaptchaVerificationTests(SimpleTestCase):
                         "hostname": "vossomewindowcleaning.com",
                     },
                 )
-                self.assertFalse(verify_contact_recaptcha("browser-token"))
+                self.assertFalse(verify_contact_recaptcha("browser-token", CONFIG))
 
     @patch("core.recaptcha.http.client.HTTPSConnection")
     def test_wrong_action_or_hostname_is_rejected(self, connection_class):
@@ -89,13 +91,13 @@ class RecaptchaVerificationTests(SimpleTestCase):
             },
         )
 
-        self.assertFalse(verify_contact_recaptcha("browser-token"))
+        self.assertFalse(verify_contact_recaptcha("browser-token", CONFIG))
 
     @patch("core.recaptcha.http.client.HTTPSConnection")
     def test_timeout_fails_closed(self, connection_class):
         connection_class.return_value.connect.side_effect = socket.timeout()
 
-        self.assertFalse(verify_contact_recaptcha("browser-token"))
+        self.assertFalse(verify_contact_recaptcha("browser-token", CONFIG))
 
     @override_settings(ENABLE_RECAPTCHA=False)
     @patch("core.recaptcha.http.client.HTTPSConnection")

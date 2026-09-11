@@ -15,7 +15,12 @@ from core.google_integration import (
     decrypt_refresh_token,
     encrypt_refresh_token,
 )
-from core.models import AnthemIntegration, GoogleIntegration, SiteSettings
+from core.models import (
+    AnthemIntegration,
+    GoogleIntegration,
+    RecaptchaIntegration,
+    SiteSettings,
+)
 
 
 KEY = Fernet.generate_key().decode()
@@ -94,6 +99,25 @@ class GoogleIntegrationTests(TestCase):
 
         request.user = self.superuser
         self.assertTrue(integration_admin.has_module_permission(request))
+
+    @override_settings(RECAPTCHA_SECRET_KEY="configured-secret")
+    def test_recaptcha_admin_is_superuser_only_and_never_displays_secret(self):
+        from django.contrib import admin
+
+        from core.admin import RecaptchaIntegrationAdmin
+
+        request = RequestFactory().get("/")
+        integration_admin = RecaptchaIntegrationAdmin(
+            RecaptchaIntegration,
+            admin.site,
+        )
+        request.user = self.staff
+        self.assertFalse(integration_admin.has_module_permission(request))
+
+        request.user = self.superuser
+        self.assertTrue(integration_admin.has_module_permission(request))
+        self.assertTrue(integration_admin.secret_configured())
+        self.assertNotIn("RECAPTCHA_SECRET_KEY", integration_admin.fields)
 
     def test_google_integration_admin_link_opens_setup_dashboard(self):
         response = self.client.get(

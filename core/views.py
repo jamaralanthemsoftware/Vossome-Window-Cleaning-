@@ -17,7 +17,7 @@ from django.views.generic import DetailView
 from .anthem import deliver_lead_to_anthem
 from .forms import LeadForm
 from .models import ContactSubmissionThrottle, FAQ, Page, Service
-from .recaptcha import verify_contact_recaptcha
+from .recaptcha import get_contact_recaptcha_config, verify_contact_recaptcha
 
 
 logger = logging.getLogger("security.contact")
@@ -68,15 +68,17 @@ def _contact_rate_limited(request):
     return False
 
 
-def _contact_context(request, form):
+def _contact_context(request, form, recaptcha_config):
     return {
         "form": form,
         "contact_submitted": request.session.pop(
             "contact_submitted",
             False,
         ),
-        "recaptcha_enabled": settings.ENABLE_RECAPTCHA,
-        "recaptcha_site_key": settings.RECAPTCHA_SITE_KEY,
+        "recaptcha_enabled": recaptcha_config is not None,
+        "recaptcha_site_key": (
+            recaptcha_config.site_key if recaptcha_config else ""
+        ),
     }
 
 
@@ -171,6 +173,7 @@ class ServiceDetailView(DetailView):
 
 
 def contact(request):
+    recaptcha_config = get_contact_recaptcha_config()
     submission_token = _contact_submission_token(request)
     form = LeadForm(
         request.POST or None,
@@ -186,10 +189,13 @@ def contact(request):
             return render(
                 request,
                 "contact.html",
-                _contact_context(request, form),
+            _contact_context(request, form, recaptcha_config),
                 status=429,
             )
-        if not verify_contact_recaptcha(request.POST.get("recaptcha_token", "")):
+        if not verify_contact_recaptcha(
+            request.POST.get("recaptcha_token", ""),
+            recaptcha_config,
+        ):
             form.add_error(
                 None,
                 "We could not verify this submission. Please try again or call us.",
@@ -197,7 +203,7 @@ def contact(request):
             return render(
                 request,
                 "contact.html",
-                _contact_context(request, form),
+                _contact_context(request, form, recaptcha_config),
                 status=400,
             )
         lead = form.save(commit=False)
@@ -217,4 +223,8 @@ def contact(request):
         messages.success(request, "Thank you. Your message has been received.")
         request.session["contact_submitted"] = True
         return redirect("contact")
-    return render(request, "contact.html", _contact_context(request, form))
+    return render(
+        request,
+        "contact.html",
+        _contact_context(request, form, recaptcha_config),
+    )

@@ -139,6 +139,79 @@ class AnthemIntegration(TimeStampedModel):
         return "Anthem CRM integration"
 
 
+class RecaptchaIntegration(TimeStampedModel):
+    singleton_key = models.CharField(
+        max_length=20,
+        unique=True,
+        default="default",
+        editable=False,
+    )
+    site_key = models.CharField(
+        max_length=255,
+        help_text="The public Google reCAPTCHA v3 site key. This is safe to expose.",
+    )
+    minimum_score = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        default=0.5,
+        help_text="Reject scores below this value. Google recommends starting at 0.5.",
+    )
+    allowed_hostnames = models.TextField(
+        default="vossomewindowcleaning.com\nwww.vossomewindowcleaning.com",
+        help_text="One hostname per line, without https:// or a path.",
+    )
+    is_enabled = models.BooleanField(
+        default=False,
+        help_text=(
+            "Enable invisible reCAPTCHA on the public contact form. The encrypted "
+            "secret key must also be configured in the deployment."
+        ),
+    )
+
+    class Meta:
+        verbose_name = "reCAPTCHA integration"
+        verbose_name_plural = "reCAPTCHA integration"
+
+    @property
+    def normalized_hostnames(self):
+        return {
+            hostname.strip().lower()
+            for hostname in self.allowed_hostnames.replace(",", "\n").splitlines()
+            if hostname.strip()
+        }
+
+    def clean(self):
+        if self.pk is None and RecaptchaIntegration.objects.exists():
+            raise ValidationError("Only one reCAPTCHA integration is allowed.")
+        if not 0 <= self.minimum_score <= 1:
+            raise ValidationError(
+                {"minimum_score": "Enter a score between 0 and 1."}
+            )
+        invalid_hostnames = [
+            hostname
+            for hostname in self.normalized_hostnames
+            if (
+                not re.fullmatch(
+                    r"(?=.{1,253}\Z)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*"
+                    r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?",
+                    hostname,
+                )
+                or ":" in hostname
+            )
+        ]
+        if invalid_hostnames:
+            raise ValidationError(
+                {"allowed_hostnames": "Enter hostnames only, one per line."}
+            )
+        if self.is_enabled and (not self.site_key or not self.normalized_hostnames):
+            raise ValidationError(
+                "Enabled reCAPTCHA requires a site key and at least one hostname."
+            )
+
+    def __str__(self):
+        return "Google reCAPTCHA v3"
+
+
 class PublishableModel(TimeStampedModel):
     title = models.CharField(max_length=180)
     slug = models.SlugField(unique=True)

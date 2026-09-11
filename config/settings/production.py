@@ -59,15 +59,9 @@ if LEAD_NOTIFICATION_EMAIL and not POSTMARK_SERVER_TOKEN:  # noqa: F405
     )
 
 if ENABLE_RECAPTCHA:  # noqa: F405
-    if not RECAPTCHA_SITE_KEY or not RECAPTCHA_SECRET_KEY:  # noqa: F405
+    if not RECAPTCHA_SECRET_KEY:  # noqa: F405
         raise ImproperlyConfigured(
-            "reCAPTCHA requires RECAPTCHA_SITE_KEY and RECAPTCHA_SECRET_KEY."
-        )
-    if not 0 <= RECAPTCHA_MIN_SCORE <= 1:  # noqa: F405
-        raise ImproperlyConfigured("RECAPTCHA_MIN_SCORE must be between 0 and 1.")
-    if not RECAPTCHA_ALLOWED_HOSTNAMES:  # noqa: F405
-        raise ImproperlyConfigured(
-            "reCAPTCHA requires at least one allowed hostname."
+            "reCAPTCHA requires RECAPTCHA_SECRET_KEY."
         )
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

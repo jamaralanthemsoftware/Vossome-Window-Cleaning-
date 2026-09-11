@@ -6,8 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from core.models import FAQ, Page, Service
-from core.models import Lead
+from core.models import FAQ, Lead, Page, RecaptchaIntegration, Service
 
 
 def contact_payload(client, **overrides):
@@ -209,6 +208,15 @@ class PublicSiteStructureTests(TestCase):
         RECAPTCHA_SECRET_KEY="test-secret-key",
     )
     def test_contact_page_loads_invisible_recaptcha_v3(self):
+        RecaptchaIntegration.objects.update_or_create(
+            singleton_key="default",
+            defaults={
+                "site_key": "test-site-key",
+                "minimum_score": 0.5,
+                "allowed_hostnames": "vossomewindowcleaning.com",
+                "is_enabled": True,
+            },
+        )
         response = self.client.get(reverse("contact"))
 
         self.assertContains(
@@ -235,6 +243,15 @@ class PublicSiteStructureTests(TestCase):
         send_email,
         deliver_to_anthem,
     ):
+        RecaptchaIntegration.objects.update_or_create(
+            singleton_key="default",
+            defaults={
+                "site_key": "test-site-key",
+                "minimum_score": 0.5,
+                "allowed_hostnames": "vossomewindowcleaning.com",
+                "is_enabled": True,
+            },
+        )
         response = self.client.post(
             reverse("contact"),
             contact_payload(
@@ -250,7 +267,9 @@ class PublicSiteStructureTests(TestCase):
             status_code=400,
         )
         self.assertFalse(Lead.objects.filter(email="client@example.com").exists())
-        verify_recaptcha.assert_called_once_with("rejected-token")
+        called_token, called_config = verify_recaptcha.call_args.args
+        self.assertEqual(called_token, "rejected-token")
+        self.assertEqual(called_config.site_key, "test-site-key")
         deliver_to_anthem.assert_not_called()
         send_email.assert_not_called()
 
