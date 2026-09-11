@@ -1,5 +1,7 @@
 import re
 
+import uuid
+
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
@@ -195,6 +197,13 @@ class FAQ(TimeStampedModel):
 
 
 class Lead(TimeStampedModel):
+    class AnthemDeliveryStatus(models.TextChoices):
+        PENDING = "pending", "Pending"
+        ATTEMPTING = "attempting", "Attempting"
+        CONFIRMED = "confirmed", "Confirmed"
+        NEEDS_REVIEW = "needs_review", "Needs review"
+        CONFIGURATION_ERROR = "configuration_error", "Configuration error"
+
     class ServiceInterest(models.TextChoices):
         WINDOW_CLEANING = "window-cleaning", "Window Cleaning"
         PRESSURE_WASHING = "pressure-washing", "Pressure Washing"
@@ -219,6 +228,16 @@ class Lead(TimeStampedModel):
     source = models.CharField(max_length=120, blank=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.NEW)
     consent_to_contact = models.BooleanField(default=False)
+    submission_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    anthem_delivery_status = models.CharField(
+        max_length=32,
+        choices=AnthemDeliveryStatus.choices,
+        default=AnthemDeliveryStatus.PENDING,
+    )
+    anthem_attempted_at = models.DateTimeField(blank=True, null=True)
+    anthem_http_status = models.PositiveSmallIntegerField(blank=True, null=True)
+    anthem_error_summary = models.CharField(max_length=240, blank=True)
+    anthem_record_identifier = models.CharField(max_length=120, blank=True)
 
     class Meta:
         ordering = ["-created_at"]
@@ -229,6 +248,12 @@ class Lead(TimeStampedModel):
 
     def __str__(self):
         return f"{self.full_name} ({self.email})"
+
+
+class ContactSubmissionThrottle(models.Model):
+    fingerprint = models.CharField(max_length=64, primary_key=True)
+    window_started_at = models.DateTimeField()
+    attempts = models.PositiveSmallIntegerField(default=0)
 
 
 class DownloadableAsset(TimeStampedModel):

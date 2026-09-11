@@ -546,6 +546,7 @@ class GoogleIntegrationTests(TestCase):
         )
 
     def test_successful_contact_redirect_signals_form_completion(self):
+        self.client.get(reverse("contact"))
         response = self.client.post(
             reverse("contact"),
             {
@@ -556,6 +557,7 @@ class GoogleIntegrationTests(TestCase):
                 "service_interest": "window-cleaning",
                 "message": "Please quote our windows.",
                 "consent_to_contact": "on",
+                "submission_token": self.client.session["contact_submission_token"],
             },
         )
         self.assertEqual(response.status_code, 302)

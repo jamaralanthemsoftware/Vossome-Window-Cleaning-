@@ -5,6 +5,10 @@ from django.core.exceptions import ImproperlyConfigured
 from .base import *  # noqa: F403
 
 DEBUG = False
+TRUST_PROXY_CLIENT_IP_HEADER = env_bool(  # noqa: F405
+    "TRUST_PROXY_CLIENT_IP_HEADER",
+    True,
+)
 
 if SECRET_KEY in {"", "development-only-key"}:  # noqa: F405
     raise ImproperlyConfigured("Production requires a strong SECRET_KEY.")

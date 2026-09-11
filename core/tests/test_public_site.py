@@ -10,6 +10,22 @@ from core.models import FAQ, Page, Service
 from core.models import Lead
 
 
+def contact_payload(client, **overrides):
+    client.get(reverse("contact"))
+    payload = {
+        "first_name": "Happy",
+        "last_name": "Client",
+        "email": "client@example.com",
+        "phone": "(314) 555-0100",
+        "service_interest": "window-cleaning",
+        "message": "Please send me a quote.",
+        "consent_to_contact": "on",
+        "submission_token": client.session["contact_submission_token"],
+    }
+    payload.update(overrides)
+    return payload
+
+
 class PublicSiteStructureTests(TestCase):
     def test_public_pages_position_vossome_as_the_company_clients_hire(self):
         home_response = self.client.get(reverse("home"))
@@ -118,15 +134,7 @@ class PublicSiteStructureTests(TestCase):
     def test_contact_submission_sends_postmark_ready_lead_notification(self):
         response = self.client.post(
             reverse("contact"),
-            {
-                "first_name": "Happy",
-                "last_name": "Client",
-                "email": "client@example.com",
-                "phone": "(314) 555-0100",
-                "service_interest": "window-cleaning",
-                "message": "Please send me a quote.",
-                "consent_to_contact": "on",
-            },
+            contact_payload(self.client),
         )
 
         self.assertRedirects(response, reverse("contact"))
@@ -138,7 +146,7 @@ class PublicSiteStructureTests(TestCase):
         )
         self.assertEqual(notification.reply_to, ["client@example.com"])
         self.assertIn("Happy Client", notification.subject)
-        self.assertIn("(314) 555-0100", notification.body)
+        self.assertIn("Phone: 3145550100", notification.body)
         self.assertIn("Service: Window Cleaning", notification.body)
         self.assertIn("Please send me a quote.", notification.body)
 
@@ -147,14 +155,13 @@ class PublicSiteStructureTests(TestCase):
     def test_email_delivery_failure_does_not_lose_the_lead(self, send):
         response = self.client.post(
             reverse("contact"),
-            {
-                "first_name": "Saved",
-                "last_name": "Client",
-                "email": "saved@example.com",
-                "service_interest": "gutter-cleaning",
-                "message": "Keep this lead even if email fails.",
-                "consent_to_contact": "on",
-            },
+            contact_payload(
+                self.client,
+                first_name="Saved",
+                email="saved@example.com",
+                service_interest="gutter-cleaning",
+                message="Keep this lead even if email fails.",
+            ),
         )
 
         self.assertRedirects(response, reverse("contact"))
@@ -164,6 +171,11 @@ class PublicSiteStructureTests(TestCase):
     def test_contact_form_requires_separate_names_and_service_interest(self):
         response = self.client.get(reverse("contact"))
 
+        self.assertContains(response, 'name="submission_token"')
+        self.assertContains(
+            response,
+            f'value="{self.client.session["contact_submission_token"]}"',
+        )
         self.assertContains(response, 'name="first_name"')
         self.assertContains(response, 'name="last_name"')
         self.assertContains(response, 'name="service_interest"')
@@ -177,18 +189,115 @@ class PublicSiteStructureTests(TestCase):
 
         invalid = self.client.post(
             reverse("contact"),
-            {
-                "first_name": "Missing",
-                "last_name": "Service",
-                "email": "missing-service@example.com",
-                "message": "No service selected.",
-                "consent_to_contact": "on",
-            },
+            contact_payload(
+                self.client,
+                first_name="Missing",
+                last_name="Service",
+                email="missing-service@example.com",
+                service_interest="",
+                message="No service selected.",
+            ),
         )
         self.assertEqual(invalid.status_code, 200)
         self.assertFalse(
             Lead.objects.filter(email="missing-service@example.com").exists()
         )
+
+    def test_contact_form_normalizes_us_phone_and_rejects_invalid_phone(self):
+        valid = self.client.post(
+            reverse("contact"),
+            contact_payload(self.client, phone="+1 (314) 555-0199"),
+        )
+        self.assertEqual(valid.status_code, 302)
+        self.assertEqual(Lead.objects.get(email="client@example.com").phone, "3145550199")
+
+        invalid = self.client.post(
+            reverse("contact"),
+            contact_payload(
+                self.client,
+                email="invalid-phone@example.com",
+                phone="555-0199",
+            ),
+        )
+        self.assertEqual(invalid.status_code, 200)
+        self.assertFalse(
+            Lead.objects.filter(email="invalid-phone@example.com").exists()
+        )
+
+    @patch("core.views.deliver_lead_to_anthem")
+    @patch("core.views.send_lead_notification")
+    def test_duplicate_browser_submission_is_saved_and_delivered_only_once(
+        self,
+        send_email,
+        deliver_to_anthem,
+    ):
+        payload = contact_payload(self.client)
+
+        first = self.client.post(reverse("contact"), payload)
+        second = self.client.post(reverse("contact"), payload)
+
+        self.assertEqual(first.status_code, 302)
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(Lead.objects.filter(email="client@example.com").count(), 1)
+        deliver_to_anthem.assert_called_once()
+        send_email.assert_called_once()
+
+    @patch("core.views.deliver_lead_to_anthem")
+    @patch("core.views.send_lead_notification")
+    def test_contact_submission_rate_limit_blocks_excess_attempts(
+        self,
+        send_email,
+        deliver_to_anthem,
+    ):
+        responses = []
+        for index in range(11):
+            responses.append(
+                self.client.post(
+                    reverse("contact"),
+                    contact_payload(
+                        self.client,
+                        email=f"client-{index}@example.com",
+                    ),
+                    REMOTE_ADDR="203.0.113.50",
+                )
+            )
+
+        self.assertEqual(responses[-1].status_code, 429)
+        self.assertEqual(Lead.objects.count(), 10)
+        self.assertEqual(deliver_to_anthem.call_count, 10)
+        self.assertEqual(send_email.call_count, 10)
+
+    @override_settings(TRUST_PROXY_CLIENT_IP_HEADER=True)
+    @patch("core.views.deliver_lead_to_anthem")
+    @patch("core.views.send_lead_notification")
+    def test_forwarded_header_prefix_cannot_bypass_rate_limit(
+        self,
+        send_email,
+        deliver_to_anthem,
+    ):
+        responses = []
+        for index in range(11):
+            responses.append(
+                self.client.post(
+                    reverse("contact"),
+                    contact_payload(
+                        self.client,
+                        email=f"forwarded-{index}@example.com",
+                    ),
+                    REMOTE_ADDR="10.0.0.4",
+                    HTTP_X_FORWARDED_FOR=(
+                        f"192.0.2.{index + 1}, 198.51.100.20"
+                    ),
+                )
+            )
+
+        self.assertEqual(responses[-1].status_code, 429)
+        self.assertEqual(
+            Lead.objects.filter(email__startswith="forwarded-").count(),
+            10,
+        )
+        self.assertEqual(deliver_to_anthem.call_count, 10)
+        self.assertEqual(send_email.call_count, 10)
 
     def test_header_and_footer_include_required_navigation(self):
         response = self.client.get(reverse("home"))

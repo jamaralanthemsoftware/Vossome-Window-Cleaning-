@@ -1,18 +1,70 @@
 import logging
+import uuid
+from datetime import timedelta
+from hashlib import sha256
+from ipaddress import ip_address
 
 from django.conf import settings
 from django.contrib import messages
 from django.core.mail import EmailMessage
+from django.db import IntegrityError, transaction
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_GET
 from django.views.generic import DetailView
 
+from .anthem import deliver_lead_to_anthem
 from .forms import LeadForm
-from .models import FAQ, Page, Service
+from .models import ContactSubmissionThrottle, FAQ, Page, Service
 
 
 logger = logging.getLogger("security.contact")
+CONTACT_SUBMISSION_TOKEN_KEY = "contact_submission_token"
+CONTACT_RATE_LIMIT = 10
+CONTACT_RATE_WINDOW_SECONDS = 15 * 60
+
+
+def _contact_submission_token(request):
+    token = request.session.get(CONTACT_SUBMISSION_TOKEN_KEY)
+    if not token:
+        token = str(uuid.uuid4())
+        request.session[CONTACT_SUBMISSION_TOKEN_KEY] = token
+    return token
+
+
+def _contact_client_address(request):
+    remote_address = request.META.get("REMOTE_ADDR", "")
+    if settings.TRUST_PROXY_CLIENT_IP_HEADER:
+        forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR", "")
+        if forwarded_for:
+            remote_address = forwarded_for.rsplit(",", 1)[-1].strip()
+    try:
+        return str(ip_address(remote_address))
+    except ValueError:
+        return "unknown"
+
+
+def _contact_rate_limited(request):
+    remote_address = _contact_client_address(request)
+    digest = sha256(
+        f"{settings.SECRET_KEY}:{remote_address}".encode("utf-8")
+    ).hexdigest()
+    now = timezone.now()
+    window_cutoff = now - timedelta(seconds=CONTACT_RATE_WINDOW_SECONDS)
+    with transaction.atomic():
+        throttle, _ = ContactSubmissionThrottle.objects.select_for_update().get_or_create(
+            fingerprint=digest,
+            defaults={"window_started_at": now, "attempts": 0},
+        )
+        if throttle.window_started_at < window_cutoff:
+            throttle.window_started_at = now
+            throttle.attempts = 0
+        if throttle.attempts >= CONTACT_RATE_LIMIT:
+            return True
+        throttle.attempts += 1
+        throttle.save(update_fields=["window_started_at", "attempts"])
+    return False
 
 
 def send_lead_notification(lead):
@@ -106,11 +158,37 @@ class ServiceDetailView(DetailView):
 
 
 def contact(request):
-    form = LeadForm(request.POST or None)
+    submission_token = _contact_submission_token(request)
+    form = LeadForm(
+        request.POST or None,
+        initial={"submission_token": submission_token},
+        expected_submission_token=submission_token,
+    )
+    if request.method == "POST" and _contact_rate_limited(request):
+        messages.error(
+            request,
+            "Too many requests were submitted. Please call or text us instead.",
+        )
+        return render(
+            request,
+            "contact.html",
+            {"form": form, "contact_submitted": False},
+            status=429,
+        )
     if request.method == "POST" and form.is_valid():
         lead = form.save(commit=False)
         lead.source = request.POST.get("source", "website")[:120]
-        lead.save()
+        lead.submission_token = form.cleaned_data["submission_token"]
+        try:
+            with transaction.atomic():
+                lead.save()
+        except IntegrityError:
+            messages.success(request, "Thank you. Your message has been received.")
+            request.session["contact_submitted"] = True
+            request.session.pop(CONTACT_SUBMISSION_TOKEN_KEY, None)
+            return redirect("contact")
+        request.session.pop(CONTACT_SUBMISSION_TOKEN_KEY, None)
+        deliver_lead_to_anthem(lead.pk)
         send_lead_notification(lead)
         messages.success(request, "Thank you. Your message has been received.")
         request.session["contact_submitted"] = True

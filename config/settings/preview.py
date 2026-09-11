@@ -7,6 +7,8 @@ DEBUG = False
 # Preview sites deliberately use local administration and database-backed leads.
 # Google OAuth, SMTP, Spaces, analytics, and a custom domain are not prerequisites.
 ENABLE_GOOGLE_ADMIN_SSO = False
+ENABLE_ANTHEM_FORM_DELIVERY = False
+ANTHEM_FORM_WEBHOOK_URL = ""
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 SERVE_LOCAL_MEDIA = not env_bool("USE_SPACES")  # noqa: F405
 

@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 
 from .models import Lead
@@ -5,6 +7,7 @@ from .models import Lead
 
 class LeadForm(forms.ModelForm):
     website = forms.CharField(required=False, widget=forms.HiddenInput)
+    submission_token = forms.UUIDField(widget=forms.HiddenInput)
     service_interest = forms.ChoiceField(
         choices=[("", "Choose a service")] + list(Lead.ServiceInterest.choices),
         label="Service you’re interested in",
@@ -40,6 +43,36 @@ class LeadForm(forms.ModelForm):
                 }
             ),
         }
+
+    def __init__(self, *args, expected_submission_token=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.expected_submission_token = expected_submission_token
+        self.fields["phone"].required = True
+
+    def clean_phone(self):
+        raw_phone = self.cleaned_data["phone"].strip()
+        if not re.fullmatch(
+            r"(?:\+?1[\s.\-]?)?(?:\([2-9]\d{2}\)|[2-9]\d{2})"
+            r"[\s.\-]?[2-9]\d{2}[\s.\-]?\d{4}",
+            raw_phone,
+        ):
+            raise forms.ValidationError(
+                "Enter a valid 10-digit US phone number."
+            )
+        digits = re.sub(r"\D", "", raw_phone)
+        if len(digits) == 11 and digits.startswith("1"):
+            digits = digits[1:]
+        return digits
+
+    def clean_submission_token(self):
+        value = self.cleaned_data["submission_token"]
+        if not self.expected_submission_token or str(value) != str(
+            self.expected_submission_token
+        ):
+            raise forms.ValidationError(
+                "This form session has expired. Please refresh and try again."
+            )
+        return value
 
     def clean_website(self):
         value = self.cleaned_data.get("website")

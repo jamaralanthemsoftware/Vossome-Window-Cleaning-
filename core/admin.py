@@ -130,14 +130,30 @@ class LeadAdmin(admin.ModelAdmin):
     list_display = [
         "full_name",
         "service_interest",
+        "anthem_delivery_status",
         "email",
         "status",
         "source",
         "created_at",
     ]
-    list_filter = ["service_interest", "status", "consent_to_contact", "created_at"]
+    list_filter = [
+        "anthem_delivery_status",
+        "service_interest",
+        "status",
+        "consent_to_contact",
+        "created_at",
+    ]
     search_fields = ["first_name", "last_name", "email", "phone", "message"]
-    readonly_fields = ["created_at", "updated_at"]
+    readonly_fields = [
+        "submission_token",
+        "anthem_delivery_status",
+        "anthem_attempted_at",
+        "anthem_http_status",
+        "anthem_error_summary",
+        "anthem_record_identifier",
+        "created_at",
+        "updated_at",
+    ]
 
     @admin.display(description="Name", ordering="last_name")
     def full_name(self, obj):
