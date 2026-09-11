@@ -109,9 +109,42 @@ class PublicSiteStructureTests(TestCase):
     def test_header_and_footer_include_required_navigation(self):
         response = self.client.get(reverse("home"))
 
-        for label in ["Home", "About us", "Services", "FAQ", "Contact us"]:
+        for label in ["Home", "About us", "Services", "FAQ", "Get a free quote"]:
             with self.subTest(label=label):
                 self.assertContains(response, label)
+
+    def test_header_quote_link_is_the_only_contact_form_link_on_conversion_pages(self):
+        pages = [self.client.get(reverse("home")), self.client.get(reverse("services"))]
+        pages.extend(
+            self.client.get(Service.objects.get(slug=slug).get_absolute_url())
+            for slug in [
+                "window-cleaning",
+                "pressure-washing",
+                "gutter-cleaning",
+                "concrete-patio-cleaning",
+            ]
+        )
+
+        for response in pages:
+            with self.subTest(path=response.request["PATH_INFO"]):
+                self.assertEqual(response.content.count(b'href="/contact/"'), 1)
+
+    def test_home_and_service_heroes_offer_call_and_text_actions(self):
+        pages = [self.client.get(reverse("home"))]
+        pages.extend(
+            self.client.get(Service.objects.get(slug=slug).get_absolute_url())
+            for slug in [
+                "window-cleaning",
+                "pressure-washing",
+                "gutter-cleaning",
+                "concrete-patio-cleaning",
+            ]
+        )
+
+        for response in pages:
+            with self.subTest(path=response.request["PATH_INFO"]):
+                self.assertContains(response, 'href="tel:+13147751080">Call us</a>')
+                self.assertContains(response, 'href="sms:+13147751080">Text us</a>')
 
     def test_about_page_uses_published_about_record(self):
         Page.objects.create(

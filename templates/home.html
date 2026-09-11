@@ -7,7 +7,7 @@
   <p class="eyebrow">We’re in the Happy Client Business</p>
   <h1>{{ site_settings.tagline|default:"Clean windows. Big Voss energy." }}</h1>
   <p class="lead">Vossome is the St. Charles exterior-cleaning company built around clear communication, dependable service, and work people are proud to recommend.</p>
-  <div class="hero-actions"><a class="button orange" data-cta-location="home-hero" href="{% url 'contact' %}">Get your free quote</a><a class="button secondary" href="tel:13147751080">Call (314) 775-1080</a></div>
+  <div class="hero-actions"><a class="button orange" href="tel:+13147751080">Call us</a><a class="button secondary" href="sms:+13147751080">Text us</a></div>
   <div class="hero-badge">#awesome<br>Vossome</div>
 </div>
 </section>
@@ -50,5 +50,5 @@
   <p><a class="button" href="{% url 'services' %}">View all services</a></p>
 </section>
 <section class="section"><div class="split"><div class="image-frame"><img src="{% static 'images/windows-exterior.jpg' %}" alt="Clean windows on a St. Charles-area home"></div><div class="story"><p class="eyebrow">The Vossome standard</p><h2>Good work is only<br>part of the job.</h2><p>We show up prepared, communicate clearly, respect your property, and stand behind the experience attached to the Vossome name.</p><p>It is how a local family business becomes a company customers can count on—today and for years to come. That is doing business #likeaVoss.</p><a class="button secondary" href="{% url 'about' %}">How Vossome does business</a></div></div></section>
-<section class="section"><div class="section-heading"><p class="eyebrow">Local, reliable, ready</p><h2>Let’s make your place awesome.</h2><p class="lead">Tell Vossome what needs attention. You’ll get a clear next step, a straightforward quote, and a team focused on making you a happy client.</p><a class="button orange" href="{% url 'contact' %}">Start a conversation</a></div></section>
+<section class="section"><div class="section-heading"><p class="eyebrow">Local, reliable, ready</p><h2>Let’s make your place awesome.</h2><p class="lead">Tell Vossome what needs attention. You’ll get a clear next step, a straightforward quote, and a team focused on making you a happy client.</p><div class="hero-actions"><a class="button orange" href="tel:+13147751080">Call us</a><a class="button secondary" href="sms:+13147751080">Text us</a></div></div></section>
 {% endblock %}

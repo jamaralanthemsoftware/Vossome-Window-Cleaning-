@@ -33,7 +33,10 @@
     <p class="eyebrow">Local exterior cleaning · St. Charles, Missouri</p>
     <h1>{{ object.title }}</h1>
     {% if object.summary %}<p class="lead">{{ object.summary|striptags }}</p>{% endif %}
-    <a class="button orange" href="{% url 'contact' %}">Get a free quote</a>
+    <div class="hero-actions">
+      <a class="button orange" href="tel:+13147751080">Call us</a>
+      <a class="button secondary" href="sms:+13147751080">Text us</a>
+    </div>
   </div>
 </section>
 
@@ -42,10 +45,8 @@
   <div class="service-cta">
     <h2>Ready to make your property look Vossome?</h2>
     <p>Tell us what needs attention and we’ll follow up with a clear next step.</p>
-    <a class="button orange" href="{% url 'contact' %}">Get a free quote</a>
-    {% if site_settings.contact_phone %}
-      <a class="button" href="tel:{{ site_settings.contact_phone|cut:'('|cut:')'|cut:' '|cut:'-' }}">Call {{ site_settings.contact_phone }}</a>
-    {% endif %}
+    <a class="button orange" href="tel:+13147751080">Call us</a>
+    <a class="button" href="sms:+13147751080">Text us</a>
   </div>
 </article>
 {% endblock %}
