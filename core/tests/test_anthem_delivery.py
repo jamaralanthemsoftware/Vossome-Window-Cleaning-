@@ -5,7 +5,7 @@ from unittest.mock import patch
 from django.test import TestCase, override_settings
 
 from core.anthem import deliver_lead_to_anthem
-from core.models import Lead
+from core.models import AnthemIntegration, Lead
 
 
 VALID_WEBHOOK = (
@@ -15,6 +15,12 @@ VALID_WEBHOOK = (
 
 
 class AnthemDeliveryTests(TestCase):
+    def setUp(self):
+        AnthemIntegration.objects.update_or_create(
+            singleton_key="default",
+            defaults={"webhook_url": VALID_WEBHOOK, "is_enabled": True},
+        )
+
     def make_lead(self):
         return Lead.objects.create(
             first_name="Jane",
@@ -34,10 +40,7 @@ class AnthemDeliveryTests(TestCase):
         response.read.return_value = body
         return connection
 
-    @override_settings(
-        ENABLE_ANTHEM_FORM_DELIVERY=True,
-        ANTHEM_FORM_WEBHOOK_URL=VALID_WEBHOOK,
-    )
+    @override_settings(ENABLE_ANTHEM_FORM_DELIVERY=True)
     @patch("core.anthem.http.client.HTTPSConnection")
     def test_201_success_true_confirms_exact_payload(self, connection_class):
         lead = self.make_lead()
@@ -73,10 +76,7 @@ class AnthemDeliveryTests(TestCase):
             },
         )
 
-    @override_settings(
-        ENABLE_ANTHEM_FORM_DELIVERY=True,
-        ANTHEM_FORM_WEBHOOK_URL=VALID_WEBHOOK,
-    )
+    @override_settings(ENABLE_ANTHEM_FORM_DELIVERY=True)
     @patch("core.anthem.http.client.HTTPSConnection")
     def test_200_success_false_needs_review(self, connection_class):
         lead = self.make_lead()
@@ -95,10 +95,7 @@ class AnthemDeliveryTests(TestCase):
         )
         self.assertEqual(lead.anthem_http_status, 200)
 
-    @override_settings(
-        ENABLE_ANTHEM_FORM_DELIVERY=True,
-        ANTHEM_FORM_WEBHOOK_URL=VALID_WEBHOOK,
-    )
+    @override_settings(ENABLE_ANTHEM_FORM_DELIVERY=True)
     @patch("core.anthem.http.client.HTTPSConnection")
     def test_http_error_needs_review_without_retry(self, connection_class):
         lead = self.make_lead()
@@ -119,10 +116,7 @@ class AnthemDeliveryTests(TestCase):
         self.assertFalse(deliver_lead_to_anthem(lead.pk))
         self.assertEqual(connection.request.call_count, 1)
 
-    @override_settings(
-        ENABLE_ANTHEM_FORM_DELIVERY=True,
-        ANTHEM_FORM_WEBHOOK_URL=VALID_WEBHOOK,
-    )
+    @override_settings(ENABLE_ANTHEM_FORM_DELIVERY=True)
     @patch("core.anthem.http.client.HTTPSConnection")
     def test_timeout_is_uncertain_and_not_retried(self, connection_class):
         lead = self.make_lead()
@@ -140,10 +134,7 @@ class AnthemDeliveryTests(TestCase):
         self.assertFalse(deliver_lead_to_anthem(lead.pk))
         self.assertEqual(connection.connect.call_count, 1)
 
-    @override_settings(
-        ENABLE_ANTHEM_FORM_DELIVERY=True,
-        ANTHEM_FORM_WEBHOOK_URL=VALID_WEBHOOK,
-    )
+    @override_settings(ENABLE_ANTHEM_FORM_DELIVERY=True)
     @patch("core.anthem.http.client.HTTPSConnection")
     def test_invalid_json_needs_review(self, connection_class):
         lead = self.make_lead()
@@ -162,10 +153,7 @@ class AnthemDeliveryTests(TestCase):
         )
         self.assertEqual(lead.anthem_error_summary, "Anthem returned a non-JSON response.")
 
-    @override_settings(
-        ENABLE_ANTHEM_FORM_DELIVERY=True,
-        ANTHEM_FORM_WEBHOOK_URL=VALID_WEBHOOK,
-    )
+    @override_settings(ENABLE_ANTHEM_FORM_DELIVERY=True)
     @patch("core.anthem.http.client.HTTPSConnection")
     def test_unexpected_json_shape_needs_review(self, connection_class):
         lead = self.make_lead()
@@ -187,13 +175,11 @@ class AnthemDeliveryTests(TestCase):
             "Anthem returned an unexpected JSON response.",
         )
 
-    @override_settings(
-        ENABLE_ANTHEM_FORM_DELIVERY=True,
-        ANTHEM_FORM_WEBHOOK_URL="",
-    )
+    @override_settings(ENABLE_ANTHEM_FORM_DELIVERY=True)
     @patch("core.anthem.http.client.HTTPSConnection")
     def test_missing_configuration_is_visible_to_admin(self, connection_class):
         lead = self.make_lead()
+        AnthemIntegration.objects.all().delete()
 
         self.assertFalse(deliver_lead_to_anthem(lead.pk))
 
@@ -207,13 +193,45 @@ class AnthemDeliveryTests(TestCase):
 
     @override_settings(
         ENABLE_ANTHEM_FORM_DELIVERY=True,
-        ANTHEM_FORM_WEBHOOK_URL=(
-            "https://evil.example/api/v1/organization/396/"
-            "gravity-forms-webhook/"
-        )
     )
     @patch("core.anthem.http.client.HTTPSConnection")
     def test_wrong_host_is_rejected_before_contact_data_is_sent(self, connection_class):
+        lead = self.make_lead()
+        AnthemIntegration.objects.update(
+            webhook_url=(
+                "https://evil.example/api/v1/organization/396/"
+                "gravity-forms-webhook/"
+            )
+        )
+
+        self.assertFalse(deliver_lead_to_anthem(lead.pk))
+
+        lead.refresh_from_db()
+        self.assertEqual(
+            lead.anthem_delivery_status,
+            Lead.AnthemDeliveryStatus.CONFIGURATION_ERROR,
+        )
+        connection_class.assert_not_called()
+
+    @override_settings(ENABLE_ANTHEM_FORM_DELIVERY=True)
+    @patch("core.anthem.http.client.HTTPSConnection")
+    def test_admin_disabled_integration_does_not_send(self, connection_class):
+        lead = self.make_lead()
+        AnthemIntegration.objects.update(is_enabled=False)
+
+        self.assertFalse(deliver_lead_to_anthem(lead.pk))
+
+        lead.refresh_from_db()
+        self.assertEqual(
+            lead.anthem_delivery_status,
+            Lead.AnthemDeliveryStatus.CONFIGURATION_ERROR,
+        )
+        self.assertIn("disabled in Django admin", lead.anthem_error_summary)
+        connection_class.assert_not_called()
+
+    @override_settings(ENABLE_ANTHEM_FORM_DELIVERY=False)
+    @patch("core.anthem.http.client.HTTPSConnection")
+    def test_deployment_kill_switch_overrides_admin_setting(self, connection_class):
         lead = self.make_lead()
 
         self.assertFalse(deliver_lead_to_anthem(lead.pk))
@@ -223,4 +241,5 @@ class AnthemDeliveryTests(TestCase):
             lead.anthem_delivery_status,
             Lead.AnthemDeliveryStatus.CONFIGURATION_ERROR,
         )
+        self.assertIn("not enabled", lead.anthem_error_summary)
         connection_class.assert_not_called()

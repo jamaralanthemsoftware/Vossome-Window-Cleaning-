@@ -1,6 +1,7 @@
 import re
 
 import uuid
+from urllib.parse import urlsplit
 
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
@@ -84,6 +85,58 @@ class GoogleIntegration(TimeStampedModel):
 
     def __str__(self):
         return self.connected_email or "Google integration"
+
+
+def validate_anthem_webhook_url(value):
+    parsed = urlsplit(value)
+    if (
+        parsed.scheme != "https"
+        or parsed.hostname != "live.anthemcrm.com"
+        or parsed.port not in (None, 443)
+        or parsed.path
+        != "/api/v1/organization/396/gravity-forms-webhook/"
+        or parsed.query
+        or parsed.fragment
+        or parsed.username
+        or parsed.password
+    ):
+        raise ValidationError(
+            "Enter the HTTPS Anthem webhook for organization 396."
+        )
+
+
+class AnthemIntegration(TimeStampedModel):
+    singleton_key = models.CharField(
+        max_length=20,
+        unique=True,
+        default="default",
+        editable=False,
+    )
+    webhook_url = models.URLField(
+        max_length=500,
+        validators=[validate_anthem_webhook_url],
+        help_text=(
+            "The organization 396 Gravity Forms webhook on live.anthemcrm.com."
+        ),
+    )
+    is_enabled = models.BooleanField(
+        default=False,
+        help_text=(
+            "Enable only after deployment configuration is ready and a controlled "
+            "test submission has been approved."
+        ),
+    )
+
+    class Meta:
+        verbose_name = "Anthem CRM integration"
+        verbose_name_plural = "Anthem CRM integration"
+
+    def clean(self):
+        if self.pk is None and AnthemIntegration.objects.exists():
+            raise ValidationError("Only one Anthem CRM integration is allowed.")
+
+    def __str__(self):
+        return "Anthem CRM integration"
 
 
 class PublishableModel(TimeStampedModel):

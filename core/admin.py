@@ -1,7 +1,16 @@
 from django.contrib import admin
 from django.shortcuts import redirect
 
-from .models import DownloadableAsset, FAQ, GoogleIntegration, Lead, Page, Service, SiteSettings
+from .models import (
+    AnthemIntegration,
+    DownloadableAsset,
+    FAQ,
+    GoogleIntegration,
+    Lead,
+    Page,
+    Service,
+    SiteSettings,
+)
 
 
 @admin.register(GoogleIntegration)
@@ -27,6 +36,28 @@ class GoogleIntegrationAdmin(admin.ModelAdmin):
 
     def changelist_view(self, request, extra_context=None):
         return redirect("google-integration-dashboard")
+
+
+@admin.register(AnthemIntegration)
+class AnthemIntegrationAdmin(admin.ModelAdmin):
+    list_display = ["webhook_url", "is_enabled", "updated_at"]
+    fields = ["webhook_url", "is_enabled", "updated_at"]
+    readonly_fields = ["updated_at"]
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser and not AnthemIntegration.objects.exists()
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_module_permission(self, request):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(SiteSettings)

@@ -15,7 +15,7 @@ from core.google_integration import (
     decrypt_refresh_token,
     encrypt_refresh_token,
 )
-from core.models import GoogleIntegration, SiteSettings
+from core.models import AnthemIntegration, GoogleIntegration, SiteSettings
 
 
 KEY = Fernet.generate_key().decode()
@@ -81,6 +81,19 @@ class GoogleIntegrationTests(TestCase):
         self.assertFalse(
             GoogleIntegrationAdmin(GoogleIntegration, admin.site).has_module_permission(request)
         )
+
+    def test_anthem_integration_admin_module_is_superuser_only(self):
+        from django.contrib import admin
+
+        from core.admin import AnthemIntegrationAdmin
+
+        request = RequestFactory().get("/")
+        request.user = self.staff
+        integration_admin = AnthemIntegrationAdmin(AnthemIntegration, admin.site)
+        self.assertFalse(integration_admin.has_module_permission(request))
+
+        request.user = self.superuser
+        self.assertTrue(integration_admin.has_module_permission(request))
 
     def test_google_integration_admin_link_opens_setup_dashboard(self):
         response = self.client.get(

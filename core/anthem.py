@@ -1,6 +1,5 @@
 import http.client
 import json
-import re
 import socket
 from urllib.parse import urlsplit
 
@@ -8,13 +7,9 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
-from .models import Lead
+from .models import AnthemIntegration, Lead, validate_anthem_webhook_url
 
 
-EXPECTED_HOST = "live.anthemcrm.com"
-EXPECTED_PATH = re.compile(
-    r"^/api/v1/organization/396/gravity-forms-webhook/$"
-)
 CONNECT_TIMEOUT_SECONDS = 3
 READ_TIMEOUT_SECONDS = 7
 MAX_RESPONSE_BYTES = 65_536
@@ -27,22 +22,16 @@ class AnthemConfigurationError(ValueError):
 def _validated_destination():
     if not settings.ENABLE_ANTHEM_FORM_DELIVERY:
         raise AnthemConfigurationError("Anthem delivery is not enabled.")
-    value = settings.ANTHEM_FORM_WEBHOOK_URL.strip()
-    if not value:
+    integration = AnthemIntegration.objects.filter(singleton_key="default").first()
+    if integration is None:
         raise AnthemConfigurationError("Anthem webhook is not configured.")
-    parsed = urlsplit(value)
-    if (
-        parsed.scheme != "https"
-        or parsed.hostname != EXPECTED_HOST
-        or parsed.port not in (None, 443)
-        or not EXPECTED_PATH.fullmatch(parsed.path)
-        or parsed.query
-        or parsed.fragment
-        or parsed.username
-        or parsed.password
-    ):
+    if not integration.is_enabled:
+        raise AnthemConfigurationError("Anthem delivery is disabled in Django admin.")
+    try:
+        validate_anthem_webhook_url(integration.webhook_url)
+    except Exception:
         raise AnthemConfigurationError("Anthem webhook configuration is invalid.")
-    return parsed
+    return urlsplit(integration.webhook_url)
 
 
 def _claim_delivery(lead_id):
