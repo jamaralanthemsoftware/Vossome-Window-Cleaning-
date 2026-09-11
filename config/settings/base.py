@@ -194,17 +194,32 @@ if env_bool("USE_SPACES"):
     AWS_QUERYSTRING_AUTH = False
     MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
 
+POSTMARK_SERVER_TOKEN = os.getenv("POSTMARK_SERVER_TOKEN", "")
 EMAIL_BACKEND = os.getenv(
     "EMAIL_BACKEND",
-    "django.core.mail.backends.console.EmailBackend",
+    (
+        "django.core.mail.backends.smtp.EmailBackend"
+        if POSTMARK_SERVER_TOKEN
+        else "django.core.mail.backends.console.EmailBackend"
+    ),
 )
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Website <website@example.com>")
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DEFAULT_FROM_EMAIL",
+    "Vossome Website <info@vossomewindowcleaning.com>",
+)
 SERVER_EMAIL = os.getenv("SERVER_EMAIL", "errors@example.com")
-EMAIL_HOST = os.getenv("EMAIL_HOST", "")
+EMAIL_HOST = os.getenv(
+    "EMAIL_HOST",
+    "smtp.postmarkapp.com" if POSTMARK_SERVER_TOKEN else "",
+)
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", POSTMARK_SERVER_TOKEN)
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", POSTMARK_SERVER_TOKEN)
 EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
+LEAD_NOTIFICATION_EMAIL = os.getenv(
+    "LEAD_NOTIFICATION_EMAIL",
+    "vossomewindowcleaning@gmail.com",
+)
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 X_FRAME_OPTIONS = "DENY"

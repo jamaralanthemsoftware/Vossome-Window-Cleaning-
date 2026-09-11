@@ -1,9 +1,13 @@
+from unittest.mock import patch
+
+from django.core import mail
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from core.models import FAQ, Page, Service
+from core.models import Lead
 
 
 class PublicSiteStructureTests(TestCase):
@@ -105,6 +109,52 @@ class PublicSiteStructureTests(TestCase):
         self.assertContains(response, '<span itemprop="addressLocality">St Charles</span>')
         self.assertContains(response, '<span itemprop="addressRegion">MO</span>')
         self.assertContains(response, '<span itemprop="postalCode">63303</span>')
+
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+        DEFAULT_FROM_EMAIL="Vossome Website <info@vossomewindowcleaning.com>",
+        LEAD_NOTIFICATION_EMAIL="vossomewindowcleaning@gmail.com",
+    )
+    def test_contact_submission_sends_postmark_ready_lead_notification(self):
+        response = self.client.post(
+            reverse("contact"),
+            {
+                "name": "Happy Client",
+                "email": "client@example.com",
+                "phone": "(314) 555-0100",
+                "message": "Please send me a quote.",
+                "consent_to_contact": "on",
+            },
+        )
+
+        self.assertRedirects(response, reverse("contact"))
+        self.assertEqual(len(mail.outbox), 1)
+        notification = mail.outbox[0]
+        self.assertEqual(
+            notification.to,
+            ["vossomewindowcleaning@gmail.com"],
+        )
+        self.assertEqual(notification.reply_to, ["client@example.com"])
+        self.assertIn("Happy Client", notification.subject)
+        self.assertIn("(314) 555-0100", notification.body)
+        self.assertIn("Please send me a quote.", notification.body)
+
+    @override_settings(LEAD_NOTIFICATION_EMAIL="vossomewindowcleaning@gmail.com")
+    @patch("core.views.EmailMessage.send", side_effect=RuntimeError("Postmark unavailable"))
+    def test_email_delivery_failure_does_not_lose_the_lead(self, send):
+        response = self.client.post(
+            reverse("contact"),
+            {
+                "name": "Saved Client",
+                "email": "saved@example.com",
+                "message": "Keep this lead even if email fails.",
+                "consent_to_contact": "on",
+            },
+        )
+
+        self.assertRedirects(response, reverse("contact"))
+        self.assertTrue(Lead.objects.filter(email="saved@example.com").exists())
+        send.assert_called_once()
 
     def test_header_and_footer_include_required_navigation(self):
         response = self.client.get(reverse("home"))

@@ -1,4 +1,8 @@
+import logging
+
+from django.conf import settings
 from django.contrib import messages
+from django.core.mail import EmailMessage
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET
@@ -6,6 +10,41 @@ from django.views.generic import DetailView
 
 from .forms import LeadForm
 from .models import FAQ, Page, Service
+
+
+logger = logging.getLogger("security.contact")
+
+
+def send_lead_notification(lead):
+    if not settings.LEAD_NOTIFICATION_EMAIL:
+        return
+
+    consent = "Yes" if lead.consent_to_contact else "No"
+    body = "\n".join(
+        [
+            "A new contact-form lead was submitted on the Vossome website.",
+            "",
+            f"Name: {lead.name}",
+            f"Email: {lead.email}",
+            f"Phone: {lead.phone or 'Not provided'}",
+            f"Consent to contact: {consent}",
+            f"Source: {lead.source or 'website'}",
+            "",
+            "Message:",
+            lead.message,
+        ]
+    )
+    message = EmailMessage(
+        subject=f"New Vossome website lead: {lead.name}",
+        body=body,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[settings.LEAD_NOTIFICATION_EMAIL],
+        reply_to=[lead.email],
+    )
+    try:
+        message.send(fail_silently=False)
+    except Exception:
+        logger.exception("Lead notification email failed for lead_id=%s", lead.pk)
 
 
 @require_GET
@@ -70,6 +109,7 @@ def contact(request):
         lead = form.save(commit=False)
         lead.source = request.POST.get("source", "website")[:120]
         lead.save()
+        send_lead_notification(lead)
         messages.success(request, "Thank you. Your message has been received.")
         request.session["contact_submitted"] = True
         return redirect("contact")

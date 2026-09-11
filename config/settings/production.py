@@ -48,6 +48,11 @@ if ENABLE_GOOGLE_SERVICES_INTEGRATION:  # noqa: F405
             "Google services integration requires GOOGLE_INTEGRATION_ALLOWED_EMAILS."
         )
 
+if LEAD_NOTIFICATION_EMAIL and not POSTMARK_SERVER_TOKEN:  # noqa: F405
+    raise ImproperlyConfigured(
+        "Lead email notifications require POSTMARK_SERVER_TOKEN."
+    )
+
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
