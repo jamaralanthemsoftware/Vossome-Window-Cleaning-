@@ -3,11 +3,27 @@ import uuid
 from django.db import migrations, models
 
 
+def populate_submission_tokens(apps, schema_editor):
+    Lead = apps.get_model("core", "Lead")
+    for lead in Lead.objects.filter(submission_token__isnull=True).iterator():
+        lead.submission_token = uuid.uuid4()
+        lead.save(update_fields=["submission_token"])
+
+
 class Migration(migrations.Migration):
     dependencies = [("core", "0012_lead_contact_fields")]
 
     operations = [
         migrations.AddField(
+            model_name="lead",
+            name="submission_token",
+            field=models.UUIDField(blank=True, editable=False, null=True),
+        ),
+        migrations.RunPython(
+            populate_submission_tokens,
+            migrations.RunPython.noop,
+        ),
+        migrations.AlterField(
             model_name="lead",
             name="submission_token",
             field=models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
