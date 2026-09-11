@@ -84,6 +84,64 @@ document.addEventListener("DOMContentLoaded", function () {
     trackEvent("contact_form_submitted");
   }
 
+  const recaptchaForm = document.querySelector(
+    ".contact-form[data-recaptcha-site-key]",
+  );
+  recaptchaForm?.addEventListener("submit", (event) => {
+    if (recaptchaForm.dataset.recaptchaState === "submitting") return;
+    event.preventDefault();
+    if (recaptchaForm.dataset.recaptchaState === "pending") return;
+    recaptchaForm.dataset.recaptchaState = "pending";
+    const submitButton = recaptchaForm.querySelector('[type="submit"]');
+    const errorMessage = recaptchaForm.querySelector(".recaptcha-error");
+    const tokenInput = recaptchaForm.querySelector('[name="recaptcha_token"]');
+    const originalLabel = submitButton?.textContent;
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = "Checking…";
+    }
+    if (errorMessage) errorMessage.hidden = true;
+
+    const failVerification = () => {
+      recaptchaForm.dataset.recaptchaState = "idle";
+      if (tokenInput) tokenInput.value = "";
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = originalLabel;
+      }
+      if (errorMessage) errorMessage.hidden = false;
+    };
+
+    if (!window.grecaptcha || !tokenInput) {
+      failVerification();
+      return;
+    }
+    window.grecaptcha.ready(() => {
+      window.grecaptcha
+        .execute(recaptchaForm.dataset.recaptchaSiteKey, {
+          action: "contact_form",
+        })
+        .then((token) => {
+          tokenInput.value = token;
+          recaptchaForm.dataset.recaptchaState = "submitting";
+          recaptchaForm.requestSubmit();
+        })
+        .catch(failVerification);
+    });
+  });
+
+  window.addEventListener("pageshow", () => {
+    if (!recaptchaForm) return;
+    recaptchaForm.dataset.recaptchaState = "idle";
+    const tokenInput = recaptchaForm.querySelector('[name="recaptcha_token"]');
+    if (tokenInput) tokenInput.value = "";
+    const submitButton = recaptchaForm.querySelector('[type="submit"]');
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.textContent = "Request my free quote";
+    }
+  });
+
   const skipLink = document.querySelector(".skip-link");
   const main = document.querySelector("#main-content");
   skipLink?.addEventListener("click", () => main?.focus());

@@ -203,6 +203,57 @@ class PublicSiteStructureTests(TestCase):
             Lead.objects.filter(email="missing-service@example.com").exists()
         )
 
+    @override_settings(
+        ENABLE_RECAPTCHA=True,
+        RECAPTCHA_SITE_KEY="test-site-key",
+        RECAPTCHA_SECRET_KEY="test-secret-key",
+    )
+    def test_contact_page_loads_invisible_recaptcha_v3(self):
+        response = self.client.get(reverse("contact"))
+
+        self.assertContains(
+            response,
+            'data-recaptcha-site-key="test-site-key"',
+        )
+        self.assertContains(response, 'name="recaptcha_token"')
+        self.assertContains(
+            response,
+            "https://www.google.com/recaptcha/api.js?render=test-site-key",
+        )
+
+    @override_settings(
+        ENABLE_RECAPTCHA=True,
+        RECAPTCHA_SITE_KEY="test-site-key",
+        RECAPTCHA_SECRET_KEY="test-secret-key",
+    )
+    @patch("core.views.deliver_lead_to_anthem")
+    @patch("core.views.send_lead_notification")
+    @patch("core.views.verify_contact_recaptcha", return_value=False)
+    def test_failed_recaptcha_is_not_saved_or_forwarded(
+        self,
+        verify_recaptcha,
+        send_email,
+        deliver_to_anthem,
+    ):
+        response = self.client.post(
+            reverse("contact"),
+            contact_payload(
+                self.client,
+                recaptcha_token="rejected-token",
+            ),
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(
+            response,
+            "We could not verify this submission.",
+            status_code=400,
+        )
+        self.assertFalse(Lead.objects.filter(email="client@example.com").exists())
+        verify_recaptcha.assert_called_once_with("rejected-token")
+        deliver_to_anthem.assert_not_called()
+        send_email.assert_not_called()
+
     def test_contact_form_normalizes_us_phone_and_rejects_invalid_phone(self):
         valid = self.client.post(
             reverse("contact"),

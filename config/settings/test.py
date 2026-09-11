@@ -1,6 +1,7 @@
 from .development import *  # noqa: F403
 
 ENABLE_ANTHEM_FORM_DELIVERY = False
+ENABLE_RECAPTCHA = False
 
 STORAGES = {
     **STORAGES,  # noqa: F405

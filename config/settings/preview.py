@@ -8,6 +8,7 @@ DEBUG = False
 # Google OAuth, SMTP, Spaces, analytics, and a custom domain are not prerequisites.
 ENABLE_GOOGLE_ADMIN_SSO = False
 ENABLE_ANTHEM_FORM_DELIVERY = False
+ENABLE_RECAPTCHA = False
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 SERVE_LOCAL_MEDIA = not env_bool("USE_SPACES")  # noqa: F405
 

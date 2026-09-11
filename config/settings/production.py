@@ -5,6 +5,7 @@ from django.core.exceptions import ImproperlyConfigured
 from .base import *  # noqa: F403
 
 DEBUG = False
+ENABLE_RECAPTCHA = env_bool("ENABLE_RECAPTCHA", True)  # noqa: F405
 TRUST_PROXY_CLIENT_IP_HEADER = env_bool(  # noqa: F405
     "TRUST_PROXY_CLIENT_IP_HEADER",
     True,
@@ -56,6 +57,18 @@ if LEAD_NOTIFICATION_EMAIL and not POSTMARK_SERVER_TOKEN:  # noqa: F405
     raise ImproperlyConfigured(
         "Lead email notifications require POSTMARK_SERVER_TOKEN."
     )
+
+if ENABLE_RECAPTCHA:  # noqa: F405
+    if not RECAPTCHA_SITE_KEY or not RECAPTCHA_SECRET_KEY:  # noqa: F405
+        raise ImproperlyConfigured(
+            "reCAPTCHA requires RECAPTCHA_SITE_KEY and RECAPTCHA_SECRET_KEY."
+        )
+    if not 0 <= RECAPTCHA_MIN_SCORE <= 1:  # noqa: F405
+        raise ImproperlyConfigured("RECAPTCHA_MIN_SCORE must be between 0 and 1.")
+    if not RECAPTCHA_ALLOWED_HOSTNAMES:  # noqa: F405
+        raise ImproperlyConfigured(
+            "reCAPTCHA requires at least one allowed hostname."
+        )
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = True

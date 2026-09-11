@@ -222,6 +222,18 @@ LEAD_NOTIFICATION_EMAIL = os.getenv(
 )
 ENABLE_ANTHEM_FORM_DELIVERY = env_bool("ENABLE_ANTHEM_FORM_DELIVERY", False)
 TRUST_PROXY_CLIENT_IP_HEADER = env_bool("TRUST_PROXY_CLIENT_IP_HEADER", False)
+ENABLE_RECAPTCHA = env_bool("ENABLE_RECAPTCHA", False)
+RECAPTCHA_SITE_KEY = os.getenv("RECAPTCHA_SITE_KEY", "")
+RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY", "")
+RECAPTCHA_MIN_SCORE = float(os.getenv("RECAPTCHA_MIN_SCORE", "0.5"))
+RECAPTCHA_ALLOWED_HOSTNAMES = {
+    hostname.strip().lower()
+    for hostname in os.getenv(
+        "RECAPTCHA_ALLOWED_HOSTNAMES",
+        "vossomewindowcleaning.com,www.vossomewindowcleaning.com",
+    ).split(",")
+    if hostname.strip()
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 X_FRAME_OPTIONS = "DENY"
