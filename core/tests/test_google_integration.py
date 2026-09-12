@@ -575,7 +575,11 @@ class GoogleIntegrationTests(TestCase):
         site_settings.search_console_verification_token = "vossome-token_123"
         site_settings.save()
         response = self.client.get(reverse("home"))
-        self.assertContains(response, "googletagmanager.com/gtag/js?id=G-VOSSOME123")
+        self.assertContains(
+            response,
+            'data-analytics-measurement-id="G-VOSSOME123"',
+        )
+        self.assertNotContains(response, "googletagmanager.com/gtag/js")
         self.assertContains(
             response,
             '<meta name="google-site-verification" content="vossome-token_123">',

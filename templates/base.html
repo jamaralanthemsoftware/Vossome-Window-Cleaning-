@@ -23,12 +23,8 @@
   <meta name="twitter:title" content="{% block twitter_title %}{{ site_settings.default_open_graph_title|default:site_settings.site_name|default:"Client Website" }}{% endblock %}">
   <meta name="twitter:description" content="{% block twitter_description %}{{ site_settings.default_open_graph_description|default:site_settings.default_meta_description|default:"" }}{% endblock %}">
   <link rel="stylesheet" href="{% static 'css/site.css' %}">
-  <script defer src="{% static 'js/site.js' %}"></script>
+  <script defer src="{% static 'js/site.js' %}"{% if site_settings.valid_analytics_measurement_id %} data-analytics-measurement-id="{{ site_settings.analytics_measurement_id }}"{% endif %}></script>
   <link rel="icon" type="image/jpeg" href="{% static 'images/logo.jpg' %}">
-  {% if site_settings.valid_analytics_measurement_id %}
-  <script async src="https://www.googletagmanager.com/gtag/js?id={{ site_settings.analytics_measurement_id }}"></script>
-  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","{{ site_settings.analytics_measurement_id }}");</script>
-  {% endif %}
 </head>
 <body{% block body_attributes %}{% endblock %}>
   <a class="skip-link" href="#main-content">Skip to content</a>

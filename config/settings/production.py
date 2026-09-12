@@ -3,6 +3,7 @@ import os
 from django.core.exceptions import ImproperlyConfigured
 
 from .base import *  # noqa: F403
+from config.csp import CONTENT_SECURITY_POLICY
 
 DEBUG = False
 ENABLE_RECAPTCHA = env_bool("ENABLE_RECAPTCHA", True)  # noqa: F405
@@ -73,3 +74,7 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = False
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
+# Keep executable third-party access path-scoped so unrelated resources on the
+# same providers are not implicitly trusted. The imported policy is enforced
+# by ContentSecurityPolicyMiddleware on every production response.

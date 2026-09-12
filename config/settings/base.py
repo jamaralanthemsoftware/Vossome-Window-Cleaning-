@@ -59,6 +59,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "core.middleware.HealthCheckMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "core.middleware.ContentSecurityPolicyMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -69,6 +70,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "axes.middleware.AxesMiddleware",
 ]
+
+CONTENT_SECURITY_POLICY = ""
 
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesStandaloneBackend",

@@ -1,6 +1,7 @@
 """Settings for a temporary client-review site before production integrations exist."""
 
 from .base import *  # noqa: F403
+from config.csp import CONTENT_SECURITY_POLICY
 
 DEBUG = False
 

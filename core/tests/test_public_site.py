@@ -7,6 +7,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from core.models import FAQ, Lead, Page, RecaptchaIntegration, Service
+from core.models import FAQ, Page, Service, SiteSettings
 
 
 def contact_payload(client, **overrides):
@@ -228,6 +229,18 @@ class PublicSiteStructureTests(TestCase):
             response,
             "https://www.google.com/recaptcha/api.js?render=test-site-key",
         )
+
+    def test_analytics_bootstrap_uses_first_party_javascript(self):
+        site_settings = SiteSettings.objects.first()
+        site_settings.analytics_measurement_id = "G-TEST123"
+        site_settings.save(update_fields=["analytics_measurement_id", "updated_at"])
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(
+            response,
+            'data-analytics-measurement-id="G-TEST123"',
+        )
+        self.assertNotContains(response, "window.dataLayer=window.dataLayer")
 
     @override_settings(
         ENABLE_RECAPTCHA=True,

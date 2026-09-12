@@ -1,6 +1,22 @@
 document.addEventListener("DOMContentLoaded", function () {
   document.documentElement.classList.add("has-js");
 
+  const siteScript = document.querySelector("script[data-analytics-measurement-id]");
+  const analyticsMeasurementId = siteScript?.dataset.analyticsMeasurementId;
+  if (analyticsMeasurementId) {
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () {
+      window.dataLayer.push(arguments);
+    };
+    window.gtag("js", new Date());
+    window.gtag("config", analyticsMeasurementId);
+
+    const analyticsScript = document.createElement("script");
+    analyticsScript.async = true;
+    analyticsScript.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(analyticsMeasurementId)}`;
+    document.head.appendChild(analyticsScript);
+  }
+
   const trackEvent = (name, data) => {
     try {
       window.umami?.track(name, data);
