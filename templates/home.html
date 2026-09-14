@@ -4,11 +4,11 @@
 {% block open_graph_description %}{{ site_settings.default_open_graph_description|default:site_settings.default_meta_description|default:"" }}{% endblock %}
 {% block content %}
 <section class="hero"><div class="hero-inner">
-  <p class="eyebrow">We’re in the Happy Client Business</p>
-  <h1>{{ site_settings.tagline|default:"Clean windows. Big Voss energy." }}</h1>
-  <p class="lead">Vossome is the St. Charles exterior-cleaning company built around clear communication, dependable service, and work people are proud to recommend.</p>
+  <p class="eyebrow">{{ site_settings.tagline|default:"Clean windows. Big Voss energy." }}</p>
+  <h1>We’re in the Happy Client Business</h1>
+  <p class="lead">Residential window cleaning, pressure washing, and exterior cleaning in St. Charles and nearby St. Louis communities—with clear communication, dependable service, and work people are proud to recommend.</p>
   <div class="hero-actions"><a class="button orange" href="tel:+13147751080">Call us</a><a class="button secondary" href="sms:+13147751080">Text us</a></div>
-  <div class="hero-badge">#awesome<br>Vossome</div>
+  <div class="hero-badge"><span>#awesomeVossome</span></div>
 </div>
 </section>
 <section class="trust-ribbon" aria-label="Why customers choose Vossome">
@@ -29,6 +29,20 @@
     </div>
     <div class="promo-photo">
       <img src="{% static 'images/family.jpg' %}" alt="The Voss family">
+    </div>
+  </div>
+</section>
+<section class="section commercial-promo" aria-label="Commercial Services">
+  <div class="split commercial-split">
+    <div class="story commercial-story">
+      <p class="eyebrow">Commercial Services</p>
+      <h2>Brighter View Window Cleaning</h2>
+      <p class="lead">The same Vossome standards, dedicated to commercial properties.</p>
+      <p>Brighter View is our dedicated commercial window-cleaning company—same ownership, same standards, and a different specialty for businesses, storefronts, and facilities across St. Charles and nearby St. Louis communities.</p>
+      <p><a class="button orange" href="{% url 'commercial' %}">Explore Brighter View</a></p>
+    </div>
+    <div class="commercial-logo-frame">
+      <img src="{% static 'images/brighter-view-logo.png' %}" alt="Brighter View Commercial Window Cleaning" class="brighter-view-logo">
     </div>
   </div>
 </section>

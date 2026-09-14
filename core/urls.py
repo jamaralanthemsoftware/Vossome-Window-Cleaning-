@@ -10,6 +10,7 @@ from .views import (
     home,
     robots_txt,
     services,
+    commercial,
 )
 
 urlpatterns = [
@@ -20,6 +21,11 @@ urlpatterns = [
     path("contact/", contact, name="contact"),
     path("faq/", faq, name="faq"),
     path("services/", services, name="services"),
+    path(
+        "commercial-window-cleaning/",
+        commercial,
+        name="commercial",
+    ),
     path("services/<slug:slug>/", ServiceDetailView.as_view(), name="service-detail"),
     path("<slug:slug>/", PageDetailView.as_view(), name="page-detail"),
 ]

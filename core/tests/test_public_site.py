@@ -98,8 +98,22 @@ class PublicSiteStructureTests(TestCase):
         self.assertEqual(health_response.json(), {"status": "ok"})
         self.assertEqual(public_response.status_code, 400)
 
+    def test_homepage_includes_brighter_view_commercial_path(self):
+        response = self.client.get(reverse("home"))
+        self.assertContains(response, f'href="{reverse("commercial")}"')
+        self.assertContains(response, "Brighter View")
+        self.assertContains(response, "brighter-view-logo.")
+        self.assertContains(response, ".png")
+
+    def test_commercial_landing_page_renders_with_vossome_standards(self):
+        response = self.client.get(reverse("commercial"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Brighter View Commercial Window Cleaning")
+        self.assertContains(response, "St. Charles")
+        self.assertContains(response, "St. Louis")
+
     def test_required_pages_render_without_content_records(self):
-        for name in ["home", "about", "services", "faq", "contact"]:
+        for name in ["home", "about", "services", "faq", "contact", "commercial"]:
             with self.subTest(name=name):
                 response = self.client.get(reverse(name))
                 self.assertEqual(response.status_code, 200)
@@ -406,7 +420,7 @@ class PublicSiteStructureTests(TestCase):
                 self.assertEqual(response.content.count(b'href="/contact/"'), 1)
 
     def test_home_and_service_heroes_offer_call_and_text_actions(self):
-        pages = [self.client.get(reverse("home"))]
+        pages = [self.client.get(reverse("home")), self.client.get(reverse("commercial"))]
         pages.extend(
             self.client.get(Service.objects.get(slug=slug).get_absolute_url())
             for slug in [

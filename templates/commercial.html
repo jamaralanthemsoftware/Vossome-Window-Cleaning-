@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Brighter View Commercial Window Cleaning | St. Charles & St. Louis{% endblock %}
+{% block meta_description %}Brighter View provides dedicated commercial window cleaning for businesses and facilities in St. Charles and nearby St. Louis communities. The same Vossome standards, scaled for commercial properties.{% endblock %}
+
+{% block content %}
+<section class="commercial-hero">
+  <div class="commercial-hero-inner">
+    <div class="commercial-hero-copy">
+      <p class="eyebrow">Same ownership. Same standards. Different specialty.</p>
+      <h1>Brighter View Commercial Window Cleaning</h1>
+      <p class="lead">Dedicated commercial service for St. Charles and nearby St. Louis communities.</p>
+      <div class="hero-actions"><a class="button orange" href="tel:+13147751080">Call us</a><a class="button secondary" href="sms:+13147751080">Text us</a></div>
+    </div>
+    <div class="commercial-hero-mark">
+      <img src="{% static 'images/brighter-view-logo.png' %}" alt="Brighter View Commercial Window Cleaning">
+    </div>
+  </div>
+</section>
+
+<div class="service-detail">
+  <div class="service-copy">
+    <h2>The same standards, built for business.</h2>
+    <p>Brighter View is the dedicated commercial window-cleaning sister company to Vossome. We understand that managing a commercial property in St. Charles or the greater St. Louis area means juggling a lot of responsibilities. Window cleaning shouldn't be one of the things you have to worry about.</p>
+    
+    <p>Whether you manage a retail storefront, a corporate office building, or a multi-tenant facility, Brighter View delivers the dependable, clear communication and rigorous quality standards you expect from the Vossome name, scaled and scheduled to suit commercial operations.</p>
+    
+    <h3>Why choose Brighter View?</h3>
+    <ul>
+      <li><strong>Consistent Quality:</strong> We don't cut corners. Your property represents your business, and we make sure it looks its best.</li>
+      <li><strong>Reliable Scheduling:</strong> We show up when we say we will, working around your operational hours to minimize disruption.</li>
+      <li><strong>Clear Communication:</strong> Straightforward quotes, clear invoicing, and a team that is easy to reach.</li>
+      <li><strong>Fully Insured:</strong> Peace of mind for property managers and owners across St. Charles and St. Louis.</li>
+    </ul>
+
+    <div class="commercial-logo-display">
+      <img src="{% static 'images/brighter-view-logo.png' %}" alt="Brighter View Commercial Window Cleaning">
+    </div>
+  </div>
+</div>
+
+<section class="service-cta">
+  <h2>Ready for a Brighter View?</h2>
+  <p>Tell us about your commercial property in St. Charles or St. Louis. We'll provide a clear next step and a straightforward quote.</p>
+  <div class="commercial-cta-actions">
+    <a class="button orange" href="{% url 'contact' %}">Get a commercial quote</a>
+    <a class="button secondary" href="tel:+13147751080">Call us</a>
+  </div>
+</section>
+{% endblock %}

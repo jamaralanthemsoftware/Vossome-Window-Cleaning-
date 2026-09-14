@@ -148,6 +148,10 @@ def services(request):
     )
 
 
+def commercial(request):
+    return render(request, "commercial.html")
+
+
 def faq(request):
     return render(
         request,

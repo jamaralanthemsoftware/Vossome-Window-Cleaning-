@@ -1,4 +1,5 @@
 from django.contrib.sitemaps import Sitemap
+from django.urls import reverse
 
 from .models import Page, Service
 
@@ -19,3 +20,14 @@ class PageSitemap(PublishedContentSitemap):
 class ServiceSitemap(PublishedContentSitemap):
     def items(self):
         return Service.objects.filter(is_published=True)
+
+
+class CommercialSitemap(Sitemap):
+    changefreq = "monthly"
+    priority = 0.8
+
+    def items(self):
+        return ["commercial"]
+
+    def location(self, item):
+        return reverse(item)
