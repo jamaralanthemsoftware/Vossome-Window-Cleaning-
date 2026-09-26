@@ -95,7 +95,9 @@ def send_lead_notification(lead):
             f"Last name: {lead.last_name}",
             f"Email: {lead.email}",
             f"Phone: {lead.phone or 'Not provided'}",
-            f"Service: {lead.get_service_interest_display() or 'Not specified'}",
+            f"Services: {', '.join(lead.selected_service_labels) or 'Not specified'}",
+            f"Deck material: {lead.get_deck_material_display() or 'Not specified'}",
+            f"Preferred reply: {lead.get_preferred_reply_method_display() or 'No preference'}",
             f"Consent to contact: {consent}",
             f"Source: {lead.source or 'website'}",
             "",
@@ -104,7 +106,7 @@ def send_lead_notification(lead):
         ]
     )
     message = EmailMessage(
-        subject=f"New Vossome {lead.get_service_interest_display() or 'website'} lead: {lead.full_name}",
+        subject=f"New Vossome {', '.join(lead.selected_service_labels) or 'website'} lead: {lead.full_name}",
         body=body,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[settings.LEAD_NOTIFICATION_EMAIL],
@@ -193,7 +195,7 @@ def contact(request):
             return render(
                 request,
                 "contact.html",
-            _contact_context(request, form, recaptcha_config),
+                _contact_context(request, form, recaptcha_config),
                 status=429,
             )
         if not verify_contact_recaptcha(

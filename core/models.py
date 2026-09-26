@@ -336,6 +336,11 @@ class Lead(TimeStampedModel):
         GUTTER_CLEANING = "gutter-cleaning", "Gutter Cleaning"
         CONCRETE_PATIO_CLEANING = "concrete-patio-cleaning", "Concrete Patio Cleaning"
 
+    class ReplyMethod(models.TextChoices):
+        TEXT = "text", "Text"
+        EMAIL = "email", "Email"
+        CALL = "call", "Call"
+
     class Status(models.TextChoices):
         NEW = "new", "New"
         CONTACTED = "contacted", "Contacted"
@@ -349,6 +354,15 @@ class Lead(TimeStampedModel):
         max_length=40,
         choices=ServiceInterest.choices,
         blank=True,
+    )
+    selected_services = models.JSONField(default=list, blank=True)
+    deck_material = models.CharField(
+        max_length=12,
+        blank=True,
+        choices=[("composite", "Composite"), ("wood", "Wood")],
+    )
+    preferred_reply_method = models.CharField(
+        max_length=10, choices=ReplyMethod.choices, blank=True
     )
     message = models.TextField()
     source = models.CharField(max_length=120, blank=True)
@@ -371,6 +385,13 @@ class Lead(TimeStampedModel):
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}".strip()
+
+    @property
+    def selected_service_labels(self):
+        labels = dict(self.ServiceInterest.choices)
+        labels.update({"deck-cleaning": "Deck cleaning", "other": "Other"})
+        services = self.selected_services or ([self.service_interest] if self.service_interest else [])
+        return [labels[value] for value in services if value in labels]
 
     def __str__(self):
         return f"{self.full_name} ({self.email})"

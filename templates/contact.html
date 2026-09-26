@@ -7,12 +7,12 @@
 {% block twitter_title %}Contact us | {{ site_settings.site_name|default:"Client Website" }}{% endblock %}
 {% block twitter_description %}Contact {{ site_settings.site_name|default:"our team" }} to ask a question or discuss your needs.{% endblock %}
 {% block content %}
-<section class="page-heading"><p class="eyebrow">Let’s get Vossome</p><h1>Tell us what needs a shine.</h1><p class="lead">Reach out for a no-pressure quote. We’ll get back to you with a clear plan.</p></section>
-<section class="contact-layout"><aside class="contact-card" itemscope itemtype="https://schema.org/LocalBusiness"><meta itemprop="name" content="Vossome Window Cleaning"><p class="eyebrow">Prefer to talk?</p><h2>Call or text the Voss.</h2><p>We’re proud to serve St. Charles and nearby St. Louis communities.</p><div class="contact-quick-actions"><a class="button orange" itemprop="telephone" href="tel:+13147751080">Call us</a><a class="button contact-text-button" href="sms:+13147751080">Text us</a></div><address itemprop="address" itemscope itemtype="https://schema.org/PostalAddress"><span itemprop="streetAddress">2745 McClay Rd</span><br><span itemprop="addressLocality">St Charles</span>, <span itemprop="addressRegion">MO</span> <span itemprop="postalCode">63303</span></address><p>Family-owned. Community-minded. Always ready to make it awesome.</p></aside><form class="contact-form" method="post"{% if recaptcha_enabled %} data-recaptcha-site-key="{{ recaptcha_site_key }}"{% endif %}>
+<section class="page-heading"><p class="eyebrow">Let’s get Vossome</p><h1>What are YOU looking at?</h1><p class="lead">Windows showing dirt old enough to drive? Maybe the driveway needs a fresh start, or the gutters have become a wildlife refuge. Tell us what needs attention, and we’ll help you choose the right service and get a clear quote. That’s how the Happy Client Business begins.</p></section>
+<section class="contact-layout"><aside class="contact-card" itemscope itemtype="https://schema.org/LocalBusiness"><meta itemprop="name" content="Vossome Window Cleaning"><p class="eyebrow">Get in touch</p><h2>Shoot us a text</h2><p>Send your name, address, and a quick description of what you’d like cleaned to (314) 775-1080. Questions and photos are welcome, too. It’s hard to surprise us anymore, and we can often put together a quote from a quick conversation.</p><p>Email works beautifully, too. You’re also welcome to call, though ladders and pressure washers have terrible phone manners. A text is the fastest way to reach us, but if you’d rather talk, please leave a voicemail and we’ll call you back when we can give you our full attention.</p><div class="contact-quick-actions"><a class="button contact-text-button" href="sms:+13147751080">Text us</a><a class="button contact-email-button" href="mailto:vossomewindowcleaning@gmail.com">Email us</a><a class="contact-secondary-link" itemprop="telephone" href="tel:+13147751080">Call us</a></div><p><a href="#quote-form">Or tell us about your project here ↓</a></p><p class="contact-service-area">Proudly based in St. Charles and serving nearby communities. We’ll bring the Vossome crew to you.</p><p>Pony Express and carrier pigeon service are still in development.</p></aside><form id="quote-form" class="contact-form" method="post"{% if recaptcha_enabled %} data-recaptcha-site-key="{{ recaptcha_site_key }}"{% endif %}>
     {% csrf_token %}
     {{ form.submission_token }}
     {% if recaptcha_enabled %}<input type="hidden" name="recaptcha_token" value="">{% endif %}
-    <div class="contact-form-heading"><p class="eyebrow">Get a free quote</p><h2>Let’s make your place shine.</h2><p>Share a few details and the Vossome team will follow up with a clear next step.</p></div>
+    <div class="contact-form-heading"><p class="eyebrow">Get a free quote</p><h2>Or tell us about your project here</h2><p>Select everything on your list, commitment-free. We’re happy to bundle services.</p></div>
     {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
     {{ form.website }}
     <div class="form-grid">
@@ -20,7 +20,9 @@
       <div class="form-field">{{ form.last_name.label_tag }}{{ form.last_name }}{{ form.last_name.errors }}</div>
       <div class="form-field">{{ form.email.label_tag }}{{ form.email }}{{ form.email.errors }}</div>
       <div class="form-field">{{ form.phone.label_tag }}{{ form.phone }}{{ form.phone.errors }}</div>
-      <div class="form-field form-field--wide">{{ form.service_interest.label_tag }}{{ form.service_interest }}{{ form.service_interest.errors }}</div>
+      <fieldset class="form-field form-field--wide choice-field"><legend>{{ form.services.label }}</legend>{{ form.services }}{{ form.services.errors }}</fieldset>
+      <fieldset class="form-field form-field--wide choice-field"><legend>{{ form.deck_material.label }}</legend><p class="field-hint">Only needed if you selected deck cleaning. Composite decks are generally a fit; we review wood decks individually before quoting.</p>{{ form.deck_material }}{{ form.deck_material.errors }}</fieldset>
+      <fieldset class="form-field form-field--wide choice-field"><legend>{{ form.preferred_reply_method.label }}</legend>{{ form.preferred_reply_method }}{{ form.preferred_reply_method.errors }}</fieldset>
       <div class="form-field form-field--wide">{{ form.message.label_tag }}{{ form.message }}{{ form.message.errors }}</div>
       <div class="form-field form-field--wide consent-field">{{ form.consent_to_contact }}{{ form.consent_to_contact.label_tag }}{{ form.consent_to_contact.errors }}</div>
     </div>
@@ -28,15 +30,6 @@
     {% if recaptcha_enabled %}<p class="form-errors recaptcha-error" hidden>We could not verify this submission. Please try again or call us.</p>{% endif %}
     <p class="form-assurance">No pressure. Just a clear response from a local team.</p>
   </form>
-</section>
-<section class="contact-map" aria-labelledby="contact-map-heading">
-  <div class="section-heading">
-    <p class="eyebrow">Find Vossome</p>
-    <h2 id="contact-map-heading">Proudly based in St. Charles.</h2>
-  </div>
-  <div class="map-embed">
-    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3111.2144515293885!2d-90.55336682406983!3d38.75878507175389!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x87df293de524ec7b%3A0x7559ec6cf4d8787c!2sVossome%20Window%20Cleaning!5e0!3m2!1sen!2sus!4v1788992080254!5m2!1sen!2sus" width="100%" height="100%" title="Map showing Vossome Window Cleaning in St. Charles, Missouri" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
-  </div>
 </section>
 {% if recaptcha_enabled %}<script async defer src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key|urlencode }}"></script>{% endif %}
 {% endblock %}

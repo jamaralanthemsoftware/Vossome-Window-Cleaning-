@@ -19,7 +19,6 @@ CONTENT_SECURITY_POLICY = "; ".join(
         ),
         (
             "frame-src "
-            "https://www.google.com/maps/ "
             "https://www.google.com/recaptcha/ "
             "https://recaptcha.google.com/recaptcha/"
         ),

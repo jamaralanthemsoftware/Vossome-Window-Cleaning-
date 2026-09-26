@@ -204,7 +204,9 @@ class FAQAdmin(admin.ModelAdmin):
 class LeadAdmin(admin.ModelAdmin):
     list_display = [
         "full_name",
-        "service_interest",
+        "services_requested",
+        "preferred_reply_method",
+        "deck_material",
         "anthem_delivery_status",
         "email",
         "status",
@@ -233,6 +235,10 @@ class LeadAdmin(admin.ModelAdmin):
     @admin.display(description="Name", ordering="last_name")
     def full_name(self, obj):
         return obj.full_name
+
+    @admin.display(description="Services")
+    def services_requested(self, obj):
+        return ", ".join(obj.selected_service_labels) or "Not specified"
 
 
 @admin.register(DownloadableAsset)

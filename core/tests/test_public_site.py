@@ -118,27 +118,23 @@ class PublicSiteStructureTests(TestCase):
                 response = self.client.get(reverse(name))
                 self.assertEqual(response.status_code, 200)
 
-    def test_contact_page_embeds_the_vossome_google_map_accessibly(self):
+    def test_contact_page_prioritizes_text_without_publishing_home_address(self):
         response = self.client.get(reverse("contact"))
-
-        self.assertContains(response, "https://www.google.com/maps/embed?pb=")
-        self.assertContains(
-            response,
-            'title="Map showing Vossome Window Cleaning in St. Charles, Missouri"',
-        )
-        self.assertContains(response, 'width="100%" height="100%"')
-        self.assertContains(response, 'loading="lazy"')
-        self.assertContains(response, 'referrerpolicy="strict-origin-when-cross-origin"')
-
-    def test_contact_page_marks_up_the_business_postal_address(self):
-        response = self.client.get(reverse("contact"))
-
+        self.assertContains(response, 'href="sms:+13147751080"')
+        self.assertContains(response, 'href="#quote-form"')
+        self.assertContains(response, 'href="mailto:')
+        self.assertContains(response, 'href="tel:+13147751080"')
+        self.assertContains(response, "based in St. Charles and serving nearby communities")
+        self.assertContains(response, 'href="mailto:vossomewindowcleaning@gmail.com"')
         self.assertContains(response, 'itemtype="https://schema.org/LocalBusiness"')
-        self.assertContains(response, 'itemtype="https://schema.org/PostalAddress"')
-        self.assertContains(response, '<span itemprop="streetAddress">2745 McClay Rd</span>')
-        self.assertContains(response, '<span itemprop="addressLocality">St Charles</span>')
-        self.assertContains(response, '<span itemprop="addressRegion">MO</span>')
-        self.assertContains(response, '<span itemprop="postalCode">63303</span>')
+        self.assertNotContains(response, "streetAddress")
+        self.assertNotContains(response, "maps/embed")
+        self.assertNotContains(response, "McClay")
+
+    def test_homepage_links_to_google_reviews(self):
+        response = self.client.get(reverse("home"))
+        self.assertContains(response, 'href="https://share.google/BAmvmaufaIzyEPUQI"')
+        self.assertContains(response, "Read our Google reviews")
 
     @override_settings(
         EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
@@ -161,7 +157,7 @@ class PublicSiteStructureTests(TestCase):
         self.assertEqual(notification.reply_to, ["client@example.com"])
         self.assertIn("Happy Client", notification.subject)
         self.assertIn("Phone: 3145550100", notification.body)
-        self.assertIn("Service: Window Cleaning", notification.body)
+        self.assertIn("Services: Window Cleaning", notification.body)
         self.assertIn("Please send me a quote.", notification.body)
 
     @override_settings(LEAD_NOTIFICATION_EMAIL="vossomewindowcleaning@gmail.com")
@@ -192,12 +188,15 @@ class PublicSiteStructureTests(TestCase):
         )
         self.assertContains(response, 'name="first_name"')
         self.assertContains(response, 'name="last_name"')
-        self.assertContains(response, 'name="service_interest"')
+        self.assertContains(response, 'name="services"')
+        self.assertContains(response, 'name="preferred_reply_method"')
         for label in [
-            "Window Cleaning",
-            "Pressure Washing",
-            "Gutter Cleaning",
-            "Concrete Patio Cleaning",
+            "Window cleaning",
+            "House washing",
+            "Gutter cleaning",
+            "Driveway, patio, or walkway cleaning",
+            "Deck cleaning (please include material)",
+            "A fifteenth-century gargoyle or something else?",
         ]:
             self.assertContains(response, label)
 
@@ -216,6 +215,53 @@ class PublicSiteStructureTests(TestCase):
         self.assertFalse(
             Lead.objects.filter(email="missing-service@example.com").exists()
         )
+
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+        LEAD_NOTIFICATION_EMAIL="vossomewindowcleaning@gmail.com",
+    )
+    def test_contact_accepts_bundled_services_and_reply_preference(self):
+        response = self.client.post(
+            reverse("contact"),
+            contact_payload(
+                self.client,
+                services=["window-cleaning", "pressure-washing", "other"],
+                preferred_reply_method="text",
+            ),
+        )
+        self.assertRedirects(response, reverse("contact"))
+        lead = Lead.objects.get(email="client@example.com")
+        self.assertEqual(lead.selected_services, ["window-cleaning", "pressure-washing", "other"])
+        self.assertEqual(lead.service_interest, "window-cleaning")
+        self.assertEqual(lead.preferred_reply_method, "text")
+        self.assertIn("Window Cleaning, Pressure Washing, Other", mail.outbox[0].body)
+        self.assertIn("Preferred reply: Text", mail.outbox[0].body)
+
+    def test_deck_material_required_and_wood_preserved_for_review(self):
+        payload = contact_payload(
+            self.client,
+            services=["deck-cleaning"],
+            service_interest="",
+            deck_material="",
+        )
+        invalid = self.client.post(reverse("contact"), payload)
+        self.assertEqual(invalid.status_code, 200)
+        self.assertContains(invalid, "Please choose composite or wood")
+        self.assertFalse(Lead.objects.filter(email="client@example.com").exists())
+
+        payload["deck_material"] = "wood"
+        valid = self.client.post(reverse("contact"), payload)
+        self.assertRedirects(valid, reverse("contact"))
+        lead = Lead.objects.get(email="client@example.com")
+        self.assertEqual(lead.selected_services, ["deck-cleaning"])
+        self.assertEqual(lead.deck_material, "wood")
+
+    def test_window_cleaning_page_has_approved_prices_and_commercial_link(self):
+        response = self.client.get(reverse("service-detail", kwargs={"slug": "window-cleaning"}))
+        self.assertContains(response, "MEANWHILE... THE NUMBERS!")
+        self.assertContains(response, "$100 visit + $10 per window")
+        self.assertContains(response, "$100 visit + $7 per window")
+        self.assertContains(response, f'href="{reverse("commercial")}"')
 
     @override_settings(
         ENABLE_RECAPTCHA=True,

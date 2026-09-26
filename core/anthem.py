@@ -94,7 +94,10 @@ def deliver_lead_to_anthem(lead_id):
             "email": lead.email,
             "cell_phone": lead.phone,
             "notes": (
-                f"Service interested in: {lead.get_service_interest_display()}\n"
+                f"Service interested in: {', '.join(lead.selected_service_labels)}\n"
+                + (f"Deck material: {lead.get_deck_material_display()}\n" if lead.deck_material else "")
+                + (f"Preferred reply: {lead.get_preferred_reply_method_display()}\n" if lead.preferred_reply_method else "")
+                +
                 f"Message: {lead.message}"
             ),
         }

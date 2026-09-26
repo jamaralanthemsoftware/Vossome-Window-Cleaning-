@@ -33,7 +33,7 @@ class ContentSecurityPolicyTests(TestCase):
 
         self.assertIn("https://www.googletagmanager.com/gtag/js", policy)
         self.assertIn("https://www.google.com/recaptcha/", policy)
-        self.assertIn("https://www.google.com/maps/", policy)
+        self.assertNotIn("https://www.google.com/maps/", policy)
         self.assertIn("https://www.google-analytics.com/g/collect", policy)
         self.assertNotIn("https://www.google.com ", policy)
         self.assertNotIn("https://www.googletagmanager.com ", policy)

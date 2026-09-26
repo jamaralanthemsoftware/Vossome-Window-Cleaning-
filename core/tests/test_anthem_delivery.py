@@ -78,6 +78,22 @@ class AnthemDeliveryTests(TestCase):
 
     @override_settings(ENABLE_ANTHEM_FORM_DELIVERY=True)
     @patch("core.anthem.http.client.HTTPSConnection")
+    def test_bundled_services_and_wood_deck_review_reach_crm_notes(self, connection_class):
+        lead = self.make_lead()
+        lead.selected_services = ["window-cleaning", "deck-cleaning", "other"]
+        lead.deck_material = "wood"
+        lead.preferred_reply_method = "text"
+        lead.save()
+        self.mocked_connection(connection_class, status=201, body=b'{"success":true}')
+
+        self.assertTrue(deliver_lead_to_anthem(lead.pk))
+        payload = json.loads(connection_class.return_value.request.call_args.kwargs["body"])
+        self.assertIn("Window Cleaning, Deck cleaning, Other", payload["notes"])
+        self.assertIn("Deck material: Wood", payload["notes"])
+        self.assertIn("Preferred reply: Text", payload["notes"])
+
+    @override_settings(ENABLE_ANTHEM_FORM_DELIVERY=True)
+    @patch("core.anthem.http.client.HTTPSConnection")
     def test_200_success_false_needs_review(self, connection_class):
         lead = self.make_lead()
         self.mocked_connection(
