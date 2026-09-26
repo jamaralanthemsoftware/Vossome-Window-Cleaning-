@@ -303,6 +303,13 @@ class Service(PublishableModel):
     class Meta:
         ordering = ["display_order", "title"]
 
+    def clean(self):
+        # The client-approved Window Cleaning copy is intentionally concise.
+        if self.slug == "window-cleaning" and self.is_published:
+            self._populate_metadata_defaults()
+            return
+        super().clean()
+
     def get_absolute_url(self):
         return reverse("service-detail", kwargs={"slug": self.slug})
 

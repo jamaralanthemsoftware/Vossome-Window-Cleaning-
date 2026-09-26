@@ -570,6 +570,11 @@ class PublicSiteStructureTests(TestCase):
         page.body = " ".join(["useful"] * 750)
         page.full_clean()
 
+    def test_client_approved_window_cleaning_copy_can_be_edited_in_admin(self):
+        service = Service.objects.get(slug="window-cleaning")
+        self.assertLess(service.word_count, 650)
+        service.full_clean()
+
     def test_detail_page_assigns_article_open_graph_elements(self):
         page = Page.objects.create(
             title="Detailed guidance",
