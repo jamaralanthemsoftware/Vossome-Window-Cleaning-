@@ -19,6 +19,7 @@ const services = [
 const chromium = process.env.CHROMIUM_PATH ?? "chromium";
 const profile = await mkdtemp(join(tmpdir(), "vossome-responsive-"));
 let browser;
+let browserStderr = "";
 let socket;
 
 async function debuggerPort() {
@@ -184,7 +185,9 @@ try {
     "--headless", "--no-sandbox", "--disable-gpu", "--no-first-run",
     "--remote-allow-origins=*", "--remote-debugging-port=0",
     `--user-data-dir=${profile}`, "about:blank",
-  ], { stdio: "ignore" });
+  ], { env: Object.fromEntries(["PATH", "HOME", "TMPDIR", "LANG", "LD_LIBRARY_PATH"].filter(key => process.env[key] !== undefined).map(key => [key, process.env[key]])), stdio: ["ignore", "ignore", "pipe"] });
+  browser.stderr.on("data", chunk => { browserStderr = (browserStderr + chunk).slice(-8192); });
+  browser.on("error", error => { console.error("Chromium spawn error: " + error.message); });
   const port = await debuggerPort();
   const pages = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
   socket = await connect(pages.find((target) => target.type === "page").webSocketDebuggerUrl);
@@ -212,6 +215,7 @@ try {
   }
 } catch (error) {
   console.error(`FAIL responsive service check: ${error.message}`);
+  console.error("Chromium stderr (last 8 KiB):\n" + (browserStderr || "(no stderr output)"));
   process.exitCode = 1;
 } finally {
   socket?.close();
