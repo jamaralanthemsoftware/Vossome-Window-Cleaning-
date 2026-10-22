@@ -7,7 +7,8 @@ on:
 
 jobs:
   checks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -17,6 +18,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Test Chromium startup handling
+        run: node --test scripts/chromium_startup.test.mjs
+      - name: Verify runner browser
+        run: |
+          test -x /usr/bin/google-chrome
+          /usr/bin/google-chrome --version
       - run: pip install -r requirements.txt
       - run: python manage.py check
         env:
@@ -35,6 +42,7 @@ jobs:
           DJANGO_SETTINGS_MODULE: config.settings.test
           SECRET_KEY: ci-window-layout-only
           CHROMIUM_PATH: /usr/bin/google-chrome
+          TMPDIR: ${{ runner.temp }}
           WINDOW_CHECK_URL: http://127.0.0.1:8000/services/window-cleaning/
         run: |
           export SQLITE_PATH="$RUNNER_TEMP/window-layout.sqlite3"
@@ -44,6 +52,11 @@ jobs:
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
           for attempt in $(seq 1 30); do
             if curl --fail --silent --output /dev/null "$WINDOW_CHECK_URL"; then break; fi
+            if ! kill -0 "$server_pid" 2>/dev/null; then
+              echo "::error::Django exited before the layout check"
+              exit 1
+            fi
             sleep 1
           done
+          curl --fail --silent --show-error --output /dev/null "$WINDOW_CHECK_URL"
           node scripts/check_window_responsive.mjs

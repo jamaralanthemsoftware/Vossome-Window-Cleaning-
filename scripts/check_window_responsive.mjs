@@ -1,10 +1,7 @@
 // Run against a seeded Django preview: WINDOW_CHECK_URL=https://.../services/window-cleaning/ node scripts/check_window_responsive.mjs
 // Other service URLs are resolved relative to the Window Cleaning URL.
 // Requires Node 22+ and Chromium (set CHROMIUM_PATH if it is not on PATH).
-import { spawn, spawnSync } from "node:child_process";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { launchChromium } from "./chromium_startup.mjs";
 import { setTimeout as delay } from "node:timers/promises";
 
 const windowUrl = process.env.WINDOW_CHECK_URL ?? "http://localhost:8000/services/window-cleaning/";
@@ -17,22 +14,8 @@ const services = [
   })),
 ];
 const chromium = process.env.CHROMIUM_PATH ?? "chromium";
-const profile = await mkdtemp(join(tmpdir(), "vossome-responsive-"));
-let browser;
-let browserStderr = "";
+let session;
 let socket;
-
-async function debuggerPort() {
-  for (let attempt = 0; attempt < 60; attempt++) {
-    if (browser.exitCode !== null) throw new Error(`Chromium exited with code ${browser.exitCode}`);
-    try {
-      return Number((await readFile(join(profile, "DevToolsActivePort"), "utf8")).split("\n")[0]);
-    } catch {
-      await delay(100);
-    }
-  }
-  throw new Error("Chromium did not open its debugging port");
-}
 
 function connect(wsUrl) {
   return new Promise((resolve, reject) => {
@@ -87,7 +70,19 @@ const inspect = `(() => {
   const visual = required(".window-hero-visual img", "hero image");
   const pricing = required(".window-section.window-pricing", "pricing section");
   const cards = [...document.querySelectorAll(".window-pricing-grid > div")];
-  if (cards.length < 2) errors.push("Expected at least two pricing cards");
+  const pricingCopy = [...(pricing?.querySelectorAll("p") ?? [])];
+  if (document.querySelector(".window-pricing-grid")) {
+    if (cards.length < 2) errors.push("Expected at least two pricing cards");
+  } else {
+    // Approved pricing copy replaced the former full/exterior-only card grid.
+    // Require the current content instead of letting an empty section pass.
+    if (pricingCopy.length < 3 || pricingCopy.some((text) => !text.textContent.trim()))
+      errors.push("Expected the pricing statement and both supporting paragraphs");
+    const statement = pricingCopy[0]?.textContent ?? "";
+    if (!statement.includes("$100") || !statement.includes("$10") ||
+        !["insides", "outsides", "screens", "sills", "tracks"].every((item) => statement.includes(item)))
+      errors.push("Missing approved standard-window price or included cleaning scope");
+  }
   const sections = [...document.querySelectorAll("article.window-content > .window-section")];
   const pricingIndex = sections.indexOf(pricing);
   if (pricingIndex < 1 || pricingIndex >= sections.length - 1) {
@@ -99,6 +94,7 @@ const inspect = `(() => {
 
   const regions = [["hero", hero], ["hero title", title], ["hero image", visual],
     ["pricing", pricing], ...cards.map((card, index) => ["pricing card " + (index + 1), card]),
+    ...pricingCopy.map((text, index) => ["pricing paragraph " + (index + 1), text]),
     ...later.map((section, index) => ["later CMS chapter " + (index + 1), section]),
     ["final CTA", cta]];
   if (document.documentElement.scrollWidth > width + 2)
@@ -178,18 +174,10 @@ try {
     const response = await fetch(service.url);
     if (!response.ok) throw new Error(`${service.url} returned HTTP ${response.status}; fix the preview before checking layout`);
   }
-  if (spawnSync(chromium, ["--version"], { stdio: "ignore" }).status !== 0) {
-    throw new Error(`Chromium not found (${chromium}); set CHROMIUM_PATH to its executable`);
-  }
-  browser = spawn(chromium, [
-    "--headless", "--no-sandbox", "--disable-gpu", "--no-first-run",
-    "--remote-allow-origins=*", "--remote-debugging-port=0",
-    `--user-data-dir=${profile}`, "about:blank",
-  ], { env: Object.fromEntries(["PATH", "HOME", "TMPDIR", "LANG", "LD_LIBRARY_PATH"].filter(key => process.env[key] !== undefined).map(key => [key, process.env[key]])), stdio: ["ignore", "ignore", "pipe"] });
-  browser.stderr.on("data", chunk => { browserStderr = (browserStderr + chunk).slice(-8192); });
-  browser.on("error", error => { console.error("Chromium spawn error: " + error.message); });
-  const port = await debuggerPort();
-  const pages = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
+  session = await launchChromium(chromium);
+  const pages = await (await fetch(`http://127.0.0.1:${session.port}/json`, {
+    signal: AbortSignal.timeout(5000),
+  })).json();
   socket = await connect(pages.find((target) => target.type === "page").webSocketDebuggerUrl);
   socket.addEventListener("message", (event) => {
     const message = JSON.parse(event.data);
@@ -210,18 +198,13 @@ try {
       await waitForPage(service);
       const errors = await evaluate(service.inspect === "window" ? inspect : inspectService);
       if (errors.length) throw new Error(`${service.name} (${service.url}) at ${width}px:\n  ${errors.join("\n  ")}`);
-      console.log(`PASS ${service.name} ${width}px: ${service.inspect === "window" ? "hero, pricing cards, later CMS chapters, final CTA" : "hero, service copy, final CTA"}`);
+      console.log(`PASS ${service.name} ${width}px: ${service.inspect === "window" ? "hero, pricing content, later CMS chapters, final CTA" : "hero, service copy, final CTA"}`);
     }
   }
 } catch (error) {
   console.error(`FAIL responsive service check: ${error.message}`);
-  console.error("Chromium stderr (last 8 KiB):\n" + (browserStderr || "(no stderr output)"));
   process.exitCode = 1;
 } finally {
   socket?.close();
-  if (browser && browser.exitCode === null) {
-    browser.kill();
-    await new Promise((resolve) => browser.once("exit", resolve));
-  }
-  await rm(profile, { recursive: true, force: true });
+  await session?.stop();
 }
