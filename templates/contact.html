@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Contact | {{ site_settings.site_name|default:"Client Website" }}{% endblock %}
 {% block meta_description %}Contact {{ site_settings.site_name|default:"our team" }} to ask a question or discuss your needs.{% endblock %}
 {% block open_graph_title %}Contact us | {{ site_settings.site_name|default:"Client Website" }}{% endblock %}
@@ -6,30 +7,84 @@
 {% block body_attributes %}{% if contact_submitted %} data-contact-submitted="true"{% endif %}{% endblock %}
 {% block twitter_title %}Contact us | {{ site_settings.site_name|default:"Client Website" }}{% endblock %}
 {% block twitter_description %}Contact {{ site_settings.site_name|default:"our team" }} to ask a question or discuss your needs.{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/quote-builder.css' %}">{% endblock %}
 {% block content %}
-<section class="page-heading"><p class="eyebrow">Let’s get Vossome</p><h1>What are YOU looking at?</h1><p class="lead">Windows showing dirt old enough to drive? Maybe the driveway needs a fresh start, or the gutters have become a wildlife refuge. Tell us what needs attention, and we’ll help you choose the right service and get a clear quote. That’s how the Happy Client Business begins.</p></section>
-<section class="contact-layout"><aside class="contact-card" itemscope itemtype="https://schema.org/LocalBusiness"><meta itemprop="name" content="Vossome Window Cleaning"><p class="eyebrow">Get in touch</p><h2>Shoot us a text</h2><p>Send your name, address, and a quick description of what you’d like cleaned to (314) 775-1080. Questions and photos are welcome, too. It’s hard to surprise us anymore, and we can often put together a quote from a quick conversation.</p><p>Email works beautifully, too. You’re also welcome to call, though ladders and pressure washers have terrible phone manners. A text is the fastest way to reach us, but if you’d rather talk, please leave a voicemail and we’ll call you back when we can give you our full attention.</p><div class="contact-quick-actions"><a class="button contact-text-button" href="sms:+13147751080">Text us</a><a class="button contact-email-button" href="mailto:vossomewindowcleaning@gmail.com">Email us</a><a class="contact-secondary-link" itemprop="telephone" href="tel:+13147751080">Call us</a></div><p><a href="#quote-form">Or tell us about your project here ↓</a></p><p class="contact-service-area">Proudly based in St. Charles and serving nearby communities. We’ll bring the Vossome crew to you.</p><p>Pony Express and carrier pigeon service are still in development.</p></aside><form id="quote-form" class="contact-form" method="post"{% if recaptcha_enabled %} data-recaptcha-site-key="{{ recaptcha_site_key }}"{% endif %}>
+<section class="page-heading"><p class="eyebrow">Let’s get Vossome</p><h1>What are YOU looking at?</h1><p class="lead">Windows showing dirt old enough to get a driver’s license? Maybe the driveway needs a fresh start, or the gutters have become a wildlife refuge. Tell us what needs attention, and we’ll help you choose the right service and get a clear quote. That’s how the Happy Client Business do.</p></section>
+<section class="contact-layout"><aside class="contact-card" itemscope itemtype="https://schema.org/LocalBusiness"><meta itemprop="name" content="Vossome Window Cleaning"><p class="eyebrow">Get in touch</p><h2>Shoot us a text</h2><p>Send your name, address, and a quick description of what you’d like cleaned to (314) 775-1080. Questions and photos are welcome, too. It’s hard to surprise us anymore, and we can often put together a quote from a quick conversation.</p><p>Email works beautifully, too. You’re also welcome to call, though ladders and pressure washers have terrible phone manners. A text is the fastest way to reach us, but if you’d rather talk, please leave a voicemail and we’ll call you back when we can give you our full attention.</p><div class="contact-quick-actions"><a class="button contact-text-button" href="sms:+13147751080">Text us</a><a class="button contact-email-button" href="mailto:vossomewindowcleaning@gmail.com">Email us</a><a class="contact-secondary-link" itemprop="telephone" href="tel:+13147751080">Call us</a></div><p><a href="#quote-form">Or tell us about your project here ↓</a></p><p class="contact-service-area">Proudly based in St. Charles and serving nearby communities. We’ll bring the Vossome crew to you.</p><p>Pony Express and carrier pigeon service are still in development.</p></aside><form id="quote-form" class="contact-form quote-builder" method="post" enctype="multipart/form-data" data-quote-builder{% if recaptcha_enabled %} data-recaptcha-site-key="{{ recaptcha_site_key }}"{% endif %}>
     {% csrf_token %}
     {{ form.submission_token }}
     {% if recaptcha_enabled %}<input type="hidden" name="recaptcha_token" value="">{% endif %}
-    <div class="contact-form-heading"><p class="eyebrow">Get a free quote</p><h2>Or tell us about your project here</h2><p>Select everything on your list, commitment-free. We’re happy to bundle services.</p></div>
-    {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="contact-form-heading"><p class="eyebrow">Pricing first, details second</p><h2>Tell us about your project</h2><p>Pick everything on your list and play with the calculators. No name, phone, or email needed until you’re ready to send. Guesses are welcome, and nothing here is a commitment.</p></div>
+    {% if form.non_field_errors %}<div class="form-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+    {% if form.errors %}<div class="form-errors" role="alert"><p>A few things need another look. Your entries are still here. If you attached photos, please choose them again.</p></div>{% endif %}
     {{ form.website }}
-    <div class="form-grid">
-      <div class="form-field">{{ form.first_name.label_tag }}{{ form.first_name }}{{ form.first_name.errors }}</div>
-      <div class="form-field">{{ form.last_name.label_tag }}{{ form.last_name }}{{ form.last_name.errors }}</div>
-      <div class="form-field">{{ form.email.label_tag }}{{ form.email }}{{ form.email.errors }}</div>
-      <div class="form-field">{{ form.phone.label_tag }}{{ form.phone }}{{ form.phone.errors }}</div>
-      <fieldset class="form-field form-field--wide choice-field"><legend>{{ form.services.label }}</legend>{{ form.services }}{{ form.services.errors }}</fieldset>
-      <fieldset class="form-field form-field--wide choice-field"><legend>{{ form.deck_material.label }}</legend><p class="field-hint">Only needed if you selected deck cleaning. Composite decks are generally a fit; we review wood decks individually before quoting.</p>{{ form.deck_material }}{{ form.deck_material.errors }}</fieldset>
-      <fieldset class="form-field form-field--wide choice-field"><legend>{{ form.preferred_reply_method.label }}</legend>{{ form.preferred_reply_method }}{{ form.preferred_reply_method.errors }}</fieldset>
-      <div class="form-field form-field--wide">{{ form.message.label_tag }}{{ form.message }}{{ form.message.errors }}</div>
-      <div class="form-field form-field--wide consent-field">{{ form.consent_to_contact }}{{ form.consent_to_contact.label_tag }}{{ form.consent_to_contact.errors }}</div>
+    {% if estimated_quote %}{% include "includes/estimate_snapshot.html" %}{% endif %}
+    <fieldset class="form-field qb-services choice-field"><legend>1. {{ form.services.label }}</legend><p class="field-hint">Choose as many as you like. Questions appear only for what you pick.</p>{{ form.services }}{{ form.services.errors }}</fieldset>
+
+    <div class="qb-panels">
+      <section class="qb-panel" data-service-panel="window" aria-labelledby="qb-window-h"><h3 id="qb-window-h">Window cleaning</h3>
+        {% include "includes/pricing_copy.html" with which="window" %}
+        <div class="form-field qb-field"><label for="{{ form.window_count.id_for_label }}">How many windows are we talking?</label>{{ form.window_count }}<p class="field-hint">Optional. A loose guess is great.</p>{{ form.window_count.errors }}</div>
+        <div class="form-field qb-check"><label class="qb-check-label">{{ form.window_unknown }} <span>I’m not sure</span></label>{{ form.window_unknown.errors }}</div>
+        <p class="qb-live" data-live="window" aria-live="polite"></p>
+        {% include "includes/pricing_copy.html" with which="window_support" %}
+      </section>
+      <section class="qb-panel" data-service-panel="gutter" aria-labelledby="qb-gutter-h"><h3 id="qb-gutter-h">Gutter cleaning</h3>
+        {% include "includes/pricing_copy.html" with which="gutter" %}
+        <p class="field-hint">Optional approximate footage at each height. Combined totals per height are fine, and guesses are welcome.</p>
+        <div class="qb-pair"><div class="form-field qb-field"><label for="{{ form.gutter_one.id_for_label }}">1-story gutters (feet × $1)</label>{{ form.gutter_one }}{{ form.gutter_one.errors }}</div><div class="form-field qb-field"><label for="{{ form.gutter_one_half.id_for_label }}">1½-story gutters (feet × $1.50)</label>{{ form.gutter_one_half }}{{ form.gutter_one_half.errors }}</div><div class="form-field qb-field"><label for="{{ form.gutter_two.id_for_label }}">2-story gutters (feet × $2)</label>{{ form.gutter_two }}{{ form.gutter_two.errors }}</div><div class="form-field qb-field"><label for="{{ form.gutter_three.id_for_label }}">3-story gutters (feet × $3)</label>{{ form.gutter_three }}{{ form.gutter_three.errors }}</div></div>
+        <div class="form-field qb-check"><label class="qb-check-label">{{ form.gutter_unknown }} <span>I’m not sure—please measure for me</span></label>{{ form.gutter_unknown.errors }}</div>
+        <p class="qb-live" data-live="gutter" aria-live="polite"></p>
+      </section>
+      <section class="qb-panel" data-service-panel="house" aria-labelledby="qb-house-h"><h3 id="qb-house-h">House washing</h3>
+        {% include "includes/pricing_copy.html" with which="house" %}
+        <div class="qb-pair"><div class="form-field qb-field"><label for="{{ form.house_three_stories.id_for_label }}">Is your home three stories tall?</label>{{ form.house_three_stories }}{{ form.house_three_stories.errors }}</div><div class="form-field qb-field"><label for="{{ form.house_large.id_for_label }}">Is it larger than 4,000 square feet?</label>{{ form.house_large }}{{ form.house_large.errors }}</div><div class="form-field qb-field"><label for="{{ form.house_roof.id_for_label }}">Will we need to get on the roof?</label>{{ form.house_roof }}{{ form.house_roof.errors }}</div></div>
+        <p class="qb-live" data-live="house" aria-live="polite"></p>
+      </section>
+      <section class="qb-panel" data-service-panel="surface" aria-labelledby="qb-surface-h"><h3 id="qb-surface-h">Driveway, patio, and walkway cleaning</h3>
+        {% include "includes/pricing_copy.html" with which="surface" %}
+        <div class="qb-pair"><div class="form-field qb-field"><label for="{{ form.surface_area.id_for_label }}">Total square feet (if you know it)</label>{{ form.surface_area }}{{ form.surface_area.errors }}</div><div class="form-field qb-field"><label for="{{ form.surface_length.id_for_label }}">Or length (feet)</label>{{ form.surface_length }}{{ form.surface_length.errors }}</div><div class="form-field qb-field"><label for="{{ form.surface_width.id_for_label }}">and width (feet)</label>{{ form.surface_width }}{{ form.surface_width.errors }}</div></div>
+        <p class="field-hint">Square feet wins if you fill it in. Length × width is used only when you give both.</p>
+        <div class="form-field qb-check"><label class="qb-check-label">{{ form.surface_unknown }} <span>I’m not sure—please measure for me</span></label>{{ form.surface_unknown.errors }}</div>
+        <p class="qb-live" data-live="surface" aria-live="polite"></p>
+      </section>
+      <section class="qb-panel" data-service-panel="deck" aria-labelledby="qb-deck-h"><h3 id="qb-deck-h">Deck cleaning</h3>
+        {% include "includes/pricing_copy.html" with which="deck" %}
+        <div class="qb-pair"><div class="form-field qb-field"><label for="{{ form.deck_area.id_for_label }}">Walking-surface square feet</label>{{ form.deck_area }}{{ form.deck_area.errors }}</div><div class="form-field qb-field"><label for="{{ form.deck_railing.id_for_label }}">Railing length (feet)</label>{{ form.deck_railing }}<p class="field-hint">Enter 0 if there is no railing.</p>{{ form.deck_railing.errors }}</div></div>
+        <div class="form-field qb-check"><label class="qb-check-label">{{ form.deck_unknown }} <span>I’m not sure—please measure for me</span></label>{{ form.deck_unknown.errors }}</div>
+        <fieldset class="form-field qb-field choice-field"><legend>What is your deck made of?</legend>{{ form.deck_material }}{{ form.deck_material.errors }}</fieldset>
+        <div class="form-field qb-check"><label class="qb-check-label">{{ form.deck_stairs }} <span>My deck has stairs (priced separately, flagged for review)</span></label>{{ form.deck_stairs.errors }}</div>
+        <div class="form-field qb-check"><label class="qb-check-label">{{ form.deck_underside }} <span>Interested in underside cleaning, too?</span></label>{{ form.deck_underside.errors }}</div>
+        <div class="qb-underside" data-underside-copy hidden><p class="qb-photo-flag">Please attach a few photos below.</p>{% include "includes/pricing_copy.html" with which="underside" %}</div>
+        <div class="form-field qb-field"><label for="{{ form.deck_access.id_for_label }}">Anything we should know about access?</label>{{ form.deck_access }}<p class="field-hint">Optional. Gates, height, tight spots, pets.</p>{{ form.deck_access.errors }}</div>
+        <p class="qb-live" data-live="deck" aria-live="polite"></p>
+      </section>
+      <section class="qb-panel qb-panel--other" data-service-panel="other"><h3>Something else</h3><p>Other services are reviewed individually. Describe what you have in the notes below, and we’ll follow up with a plan. They are not part of any total shown here.</p></section>
     </div>
-    <button class="button orange contact-submit" type="submit">Request my free quote</button>
+
+    <div class="qb-summary" data-qb-summary aria-live="polite"><p class="qb-summary-empty">Select a service above to see a running estimate. It’s only an estimate; we confirm counts, measurements, and the exact price at your appointment, and you give the okay before we start.</p></div>
+
+    <div class="qb-details">
+      <h3 class="qb-step">2. Your details</h3>
+      <div class="qb-reassure">{% include "includes/pricing_copy.html" with which="reassure" %}</div>
+      <div class="form-grid">
+        <div class="form-field">{{ form.first_name.label_tag }}{{ form.first_name }}{{ form.first_name.errors }}</div>
+        <div class="form-field">{{ form.last_name.label_tag }}{{ form.last_name }}{{ form.last_name.errors }}</div>
+        <div class="form-field form-field--wide">{{ form.service_address.label_tag }}{{ form.service_address }}{{ form.service_address.errors }}</div>
+        <fieldset class="form-field form-field--wide choice-field"><legend>{{ form.preferred_reply_method.label }}</legend>{{ form.preferred_reply_method }}{{ form.preferred_reply_method.errors }}</fieldset>
+        <div class="form-field" data-contact-field="phone">{{ form.phone.label_tag }}{{ form.phone }}{{ form.phone.errors }}</div>
+        <div class="form-field" data-contact-field="email">{{ form.email.label_tag }}{{ form.email }}{{ form.email.errors }}</div>
+        <p class="field-hint form-field--wide">Only the one that matches your preferred method is required.</p>
+        <div class="form-field form-field--wide">{{ form.message.label_tag }}{{ form.message }}{{ form.message.errors }}</div>
+        <div class="form-field form-field--wide qb-photos"><label for="{{ form.photos.id_for_label }}">Photos (optional)</label>{{ form.photos }}<p class="field-hint">JPG, PNG, or WebP. Up to 5 photos, 5 MB each. Photos are resized for email and sent to Vossome as attachments, not saved on the website. If anything goes wrong with the form, you’ll need to choose photos again.</p><p class="form-errors" data-photo-error role="alert" hidden></p>{{ form.photos.errors }}</div>
+        <div class="form-field form-field--wide consent-field">{{ form.consent_to_contact }}{{ form.consent_to_contact.label_tag }}{{ form.consent_to_contact.errors }}</div>
+      </div>
+    </div>
+    <button class="button orange contact-submit" type="submit">Hit Me With a Quote</button>
     {% if recaptcha_enabled %}<p class="form-errors recaptcha-error" hidden>We could not verify this submission. Please try again or call us.</p>{% endif %}
-    <p class="form-assurance">No pressure. Just a clear response from a local team.</p>
+    <p class="form-assurance">Sending this does not book an appointment, and it doesn’t sign you up for marketing. Someone on the team will follow up.</p>
   </form>
 </section>
 {% if recaptcha_enabled %}<script async defer src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key|urlencode }}"></script>{% endif %}
+<script defer src="{% static 'js/quote-builder.js' %}"></script>
 {% endblock %}

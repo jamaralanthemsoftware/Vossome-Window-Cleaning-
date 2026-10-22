@@ -8,6 +8,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from .models import AnthemIntegration, Lead, validate_anthem_webhook_url
+from .pricing import estimate_lines
 
 
 CONNECT_TIMEOUT_SECONDS = 3
@@ -94,6 +95,11 @@ def deliver_lead_to_anthem(lead_id):
             "email": lead.email,
             "cell_phone": lead.phone,
             "notes": (
+                (f"Service address: {lead.service_address}\n"
+                 + estimate_lines(lead.estimate_snapshot) + "\n"
+                 + "\n".join(f"{key}: {value}" for key, value in lead.quote_details.items()) + "\n"
+                 if lead.estimate_snapshot else "")
+                +
                 f"Service interested in: {', '.join(lead.selected_service_labels)}\n"
                 + (f"Deck material: {lead.get_deck_material_display()}\n" if lead.deck_material else "")
                 + (f"Preferred reply: {lead.get_preferred_reply_method_display()}\n" if lead.preferred_reply_method else "")

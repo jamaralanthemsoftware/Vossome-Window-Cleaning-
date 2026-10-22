@@ -355,8 +355,12 @@ class Lead(TimeStampedModel):
 
     first_name = models.CharField(max_length=60)
     last_name = models.CharField(max_length=60)
-    email = models.EmailField()
+    email = models.EmailField(blank=True)
     phone = models.CharField(max_length=40, blank=True)
+    service_address = models.TextField(max_length=1000, default="")
+    quote_details = models.JSONField(default=dict, blank=True)
+    estimate_snapshot = models.JSONField(default=dict, blank=True)
+    email_notification_status = models.CharField(max_length=12, default="pending", choices=[("pending", "Pending"), ("sent", "Sent"), ("failed", "Failed"), ("disabled", "Disabled")])
     service_interest = models.CharField(
         max_length=40,
         choices=ServiceInterest.choices,
@@ -366,12 +370,12 @@ class Lead(TimeStampedModel):
     deck_material = models.CharField(
         max_length=12,
         blank=True,
-        choices=[("composite", "Composite"), ("wood", "Wood")],
+        choices=[("composite", "Composite"), ("wood", "Wood"), ("other", "Other"), ("unsure", "Not sure")],
     )
     preferred_reply_method = models.CharField(
         max_length=10, choices=ReplyMethod.choices, blank=True
     )
-    message = models.TextField()
+    message = models.TextField(blank=True)
     source = models.CharField(max_length=120, blank=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.NEW)
     consent_to_contact = models.BooleanField(default=False)
@@ -408,6 +412,21 @@ class ContactSubmissionThrottle(models.Model):
     fingerprint = models.CharField(max_length=64, primary_key=True)
     window_started_at = models.DateTimeField()
     attempts = models.PositiveSmallIntegerField(default=0)
+
+
+def lead_photo_path(instance, filename):
+    return f"{instance.lead.submission_token}/{uuid.uuid4().hex}.jpg"
+
+
+from .lead_storage import private_lead_storage
+
+
+class LeadPhoto(TimeStampedModel):
+    lead = models.ForeignKey(Lead, related_name="photos", on_delete=models.CASCADE)
+    image = models.FileField(upload_to=lead_photo_path, storage=private_lead_storage)
+
+    def __str__(self):
+        return f"Project photo for {self.lead.full_name}"
 
 
 class DownloadableAsset(TimeStampedModel):

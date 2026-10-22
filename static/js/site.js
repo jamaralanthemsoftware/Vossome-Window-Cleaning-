@@ -154,7 +154,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const submitButton = recaptchaForm.querySelector('[type="submit"]');
     if (submitButton) {
       submitButton.disabled = false;
-      submitButton.textContent = "Request my free quote";
+      submitButton.textContent = "Hit Me With a Quote";
     }
   });
 

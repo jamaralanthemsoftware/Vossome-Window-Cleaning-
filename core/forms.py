@@ -3,9 +3,11 @@ import re
 from django import forms
 
 from .models import Lead
+from .quote_fields import QuoteFields
+from .pricing import QUOTE_FIELDS, SERVICE_FIELDS, estimate_quote
 
 
-class LeadForm(forms.ModelForm):
+class LeadForm(QuoteFields, forms.ModelForm):
     website = forms.CharField(required=False, widget=forms.HiddenInput)
     submission_token = forms.UUIDField(widget=forms.HiddenInput)
     services = forms.MultipleChoiceField(
@@ -27,6 +29,7 @@ class LeadForm(forms.ModelForm):
         fields = [
             "first_name",
             "last_name",
+            "service_address",
             "email",
             "phone",
             "selected_services",
@@ -38,6 +41,7 @@ class LeadForm(forms.ModelForm):
         labels = {
             "first_name": "First name",
             "last_name": "Last name",
+            "service_address": "Service address",
             "phone": "Phone number",
             "message": "How can we help?",
             "preferred_reply_method": "How would you prefer us to reply?",
@@ -66,15 +70,38 @@ class LeadForm(forms.ModelForm):
     def __init__(self, *args, expected_submission_token=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.expected_submission_token = expected_submission_token
-        self.fields["phone"].required = True
+        self.fields["phone"].required = False
+        self.fields["email"].required = False
+        self.fields["message"].required = False
         self.fields.pop("selected_services")
-        self.fields["preferred_reply_method"].required = False
+        self.fields["preferred_reply_method"].required = True
         self.fields["preferred_reply_method"].choices = [
-            ("", "No preference"), *Lead.ReplyMethod.choices
+            *Lead.ReplyMethod.choices
         ]
         self.fields["deck_material"].choices = [
-            ("", "Not sure"), ("composite", "Composite"), ("wood", "Wood")
+            ("", "Please choose"), ("composite", "Composite"), ("wood", "Wood"),
+            ("other", "Other"), ("unsure", "I’m not sure"),
         ]
+        self.fields["deck_material"].required = False
+        self.fields["service_address"].widget = forms.Textarea(attrs={"rows": 3, "autocomplete": "street-address"})
+        # Ignore stale/hostile measurements for services the visitor deselected.
+        if self.is_bound:
+            selected = set(self.data.getlist("services") if hasattr(self.data, "getlist") else self.data.get("services", []))
+            if not selected and self.data.get("service_interest"):
+                selected.add(self.data["service_interest"])
+            for service, names in SERVICE_FIELDS.items():
+                if service not in selected:
+                    for name in names:
+                        self.fields[name].disabled = True
+            for unknown, names in {
+                "window_unknown": ("window_count",),
+                "gutter_unknown": ("gutter_one", "gutter_one_half", "gutter_two", "gutter_three"),
+                "surface_unknown": ("surface_area", "surface_length", "surface_width"),
+                "deck_unknown": ("deck_area", "deck_railing"),
+            }.items():
+                if self.data.get(unknown):
+                    for name in names:
+                        self.fields[name].disabled = True
 
     def clean_services(self):
         services = self.cleaned_data["services"]
@@ -89,16 +116,26 @@ class LeadForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
-        if "deck-cleaning" in cleaned.get("services", []) and not cleaned.get("deck_material"):
-            self.add_error("deck_material", "Please choose composite or wood so we can review your deck.")
         if "deck-cleaning" not in cleaned.get("services", []):
             cleaned["deck_material"] = ""
+        method = cleaned.get("preferred_reply_method")
+        if method in ("text", "call") and not cleaned.get("phone"):
+            self.add_error("phone", "Enter a phone number so the team can call or text you.")
+        if method == "email" and not cleaned.get("email"):
+            self.add_error("email", "Enter an email address so the team can reply.")
+        self.estimated_quote = estimate_quote(cleaned.get("services", []), cleaned)
         return cleaned
 
     def save(self, commit=True):
         lead = super().save(commit=False)
         lead.selected_services = self.cleaned_data["services"]
         lead.deck_material = self.cleaned_data["deck_material"]
+        active_fields = {name for service in lead.selected_services for name in SERVICE_FIELDS.get(service, ())}
+        lead.quote_details = {
+            key: str(value) if key in QUOTE_FIELDS and hasattr(value, "as_tuple") else value
+            for key, value in self.cleaned_data.items() if key in active_fields
+        }
+        lead.estimate_snapshot = estimate_quote(lead.selected_services, lead.quote_details)
         lead.service_interest = next(
             (value for value in lead.selected_services if value in dict(Lead.ServiceInterest.choices)),
             "",
@@ -110,6 +147,8 @@ class LeadForm(forms.ModelForm):
 
     def clean_phone(self):
         raw_phone = self.cleaned_data["phone"].strip()
+        if not raw_phone:
+            return ""
         if not re.fullmatch(
             r"(?:\+?1[\s.\-]?)?(?:\([2-9]\d{2}\)|[2-9]\d{2})"
             r"[\s.\-]?[2-9]\d{2}[\s.\-]?\d{4}",

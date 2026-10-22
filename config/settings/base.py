@@ -173,6 +173,7 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 SERVE_LOCAL_MEDIA = env_bool("SERVE_LOCAL_MEDIA", DEBUG)
+PRIVATE_OBJECT_DIR = os.getenv("PRIVATE_OBJECT_DIR", "")
 
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},

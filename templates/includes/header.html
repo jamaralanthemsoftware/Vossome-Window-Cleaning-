@@ -1,6 +1,7 @@
 {% load static %}<div class="site-header-wrap"><header class="site-header">
   <a class="brand" href="{% url 'home' %}" aria-label="Vossome Window Cleaning home"><img src="{% static 'images/logo.jpg' %}" alt="Vossome Window Cleaning"></a>
-  <nav class="main-nav" aria-label="Main navigation">
+  <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav" aria-label="Open main menu"><span class="menu-bars" aria-hidden="true"></span><span class="menu-label">Menu</span></button>
+  <nav class="main-nav" id="main-nav" aria-label="Main navigation">
     <a href="{% url 'home' %}">Home</a>
     <a href="{% url 'about' %}">About us</a>
     <a href="{% url 'services' %}">Services</a>
@@ -8,6 +9,6 @@
     {% for page in navigation_pages %}
       <a href="{{ page.get_absolute_url }}">{{ page.title }}</a>
     {% endfor %}
-    <a class="nav-cta" data-cta-location="header" href="{% url 'contact' %}">Get a free quote</a>
+    <a class="nav-cta" data-cta-location="header" href="{% url 'contact' %}">Get a Quote</a>
   </nav>
 </header></div>

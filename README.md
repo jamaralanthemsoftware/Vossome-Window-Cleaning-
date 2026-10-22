@@ -55,6 +55,14 @@ credentials, analytics identifiers, and service configuration must never be copi
 
 ## Local setup
 
+To check the Window Cleaning layout before release, run the Django preview with
+migrated service content, then from this directory run
+`WINDOW_CHECK_URL=http://localhost:8000/services/window-cleaning/ node scripts/check_window_responsive.mjs`.
+Set `CHROMIUM_PATH` if Chromium is not on your PATH (for example, to `google-chrome`).
+The check runs at 320, 375, 390, 768, and 1440px and is also part of the Django
+GitHub checks. It fails if the hero, pricing cards, later CMS chapters, or final
+CTA are missing or horizontally clipped.
+
 ```bash
 cp .env.example .env
 python -m venv .venv

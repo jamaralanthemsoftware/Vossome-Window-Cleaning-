@@ -1,6 +1,9 @@
+from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.shortcuts import redirect
+from django.urls import reverse
+from django.utils.html import format_html_join
 
 from .models import (
     AnthemIntegration,
@@ -8,6 +11,7 @@ from .models import (
     FAQ,
     GoogleIntegration,
     Lead,
+    LeadPhoto,
     Page,
     RecaptchaIntegration,
     Service,
@@ -160,8 +164,27 @@ class PageAdmin(admin.ModelAdmin):
     ]
 
 
+class ServiceAdminForm(forms.ModelForm):
+    class Meta:
+        model = Service
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.slug == "window-cleaning":
+            self.fields["body"].help_text = (
+                'Window Cleaning sections: edit the words inside each heading, but keep its '
+                'marker, e.g. <h2 data-window-chapter="intro">New heading</h2>. '
+                'To reorder, move the whole heading and its content up to the next heading. '
+                'Keep the entire <section class="window-pricing">...</section> together for '
+                'pricing. New headings without a marker use neutral styling; available markers '
+                'are intro, adventure, transparent, way, and ready. Copy and prices remain editable.'
+            )
+
+
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
+    form = ServiceAdminForm
     list_display = ["title", "slug", "is_published", "display_order", "updated_at"]
     list_filter = ["is_published"]
     search_fields = ["title", "summary", "body"]
@@ -200,8 +223,31 @@ class FAQAdmin(admin.ModelAdmin):
     search_fields = ["question", "answer"]
 
 
+class LeadPhotoInline(admin.TabularInline):
+    model = LeadPhoto
+    extra = 0
+    fields = ["private_download"]
+    readonly_fields = ["private_download"]
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    @admin.display(description="Private project photo")
+    def private_download(self, obj):
+        return format_html_join("", '<a href="{}">Download photo (authorized staff only)</a>', [(reverse("lead-photo", kwargs={"pk": obj.pk}),)])
+
+
 @admin.register(Lead)
 class LeadAdmin(admin.ModelAdmin):
+    inlines = [LeadPhotoInline]
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        # Older saved leads predate address collection; keep their status editable.
+        if obj and not obj.service_address and "service_address" in form.base_fields:
+            form.base_fields["service_address"].required = False
+        return form
     list_display = [
         "full_name",
         "services_requested",
@@ -209,6 +255,7 @@ class LeadAdmin(admin.ModelAdmin):
         "deck_material",
         "anthem_delivery_status",
         "email",
+        "email_notification_status",
         "status",
         "source",
         "created_at",
@@ -220,9 +267,12 @@ class LeadAdmin(admin.ModelAdmin):
         "consent_to_contact",
         "created_at",
     ]
-    search_fields = ["first_name", "last_name", "email", "phone", "message"]
+    search_fields = ["first_name", "last_name", "email", "phone", "message", "service_address"]
     readonly_fields = [
         "submission_token",
+        "quote_details",
+        "estimate_snapshot",
+        "email_notification_status",
         "anthem_delivery_status",
         "anthem_attempted_at",
         "anthem_http_status",

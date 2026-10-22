@@ -15,11 +15,42 @@
     {{ block.super }}
   {% endif %}
 {% endblock %}
+{% block body_attributes %}{% if object.slug == "window-cleaning" %} class="home-design window-design"{% endif %}{% endblock %}
+{% block page_styles %}{% if object.slug == "window-cleaning" %}<link rel="stylesheet" href="{% static 'css/home-design.css' %}"><link rel="stylesheet" href="{% static 'css/window-design.css' %}">{% endif %}{% endblock %}
 {% block content %}
-<section class="service-hero service-hero--{{ object.slug }}">
-  {% if object.slug == "window-cleaning" %}
+{% if object.slug == "window-cleaning" %}
+<section class="window-hero" aria-labelledby="window-title">
+  <div class="window-hero-copy">
+    <p class="eyebrow">Residential service / St. Charles</p>
+    <h1 id="window-title">{{ object.title }}</h1>
+    <div class="hero-rule" aria-hidden="true"></div>
+    {% if object.summary %}<p class="hero-deck">{{ object.summary|striptags }}</p>{% endif %}
+    <div class="hero-actions">
+      <a class="button" href="sms:+13147751080">Text us</a>
+      <a class="button secondary" href="tel:+13147751080">Call us</a>
+      <a class="button secondary" href="#pricing">See pricing <span aria-hidden="true">↓</span></a>
+    </div>
+  </div>
+  <div class="window-hero-visual">
     <img src="{% static 'images/service-window-cleaning.webp' %}" alt="Clean exterior windows on a well-kept residential home">
-  {% elif object.slug == "pressure-washing" %}
+    <span class="image-stamp" aria-hidden="true">The view looks better from here</span>
+  </div>
+</section>
+<article class="window-content">
+  {% for section in object.body|window_content_sections %}
+    <section class="window-section window-{{ section.kind }}"{% if section.kind == "pricing" %} id="pricing"{% endif %}>
+      <div class="window-section-inner">
+        {{ section.html }}
+         {% if section.final_action %}
+          <a class="button window-final-action" href="sms:+13147751080">Text us <span aria-hidden="true">↗</span></a>
+        {% endif %}
+      </div>
+    </section>
+  {% endfor %}
+</article>
+{% else %}
+<section class="service-hero service-hero--{{ object.slug }}">
+  {% if object.slug == "pressure-washing" %}
     <img src="{% static 'images/service-pressure-washing.webp' %}" alt="Professional pressure washing on a residential driveway">
   {% elif object.slug == "gutter-cleaning" %}
     <img src="{% static 'images/service-gutter-cleaning.webp' %}" alt="Autumn leaves clogging a residential roof gutter">
@@ -40,6 +71,11 @@
   </div>
 </section>
 
+{% if object.slug == "gutter-cleaning" or object.slug == "pressure-washing" or object.slug == "concrete-patio-cleaning" %}<section class="service-pricing" aria-label="Pricing"><div class="service-pricing-inner">
+  {% if object.slug == "gutter-cleaning" %}{% include "includes/pricing_copy.html" with which="gutter" %}{% endif %}
+  {% if object.slug == "pressure-washing" %}{% include "includes/pricing_copy.html" with which="house" %}{% include "includes/pricing_copy.html" with which="surface_short" %}{% endif %}
+  {% if object.slug == "concrete-patio-cleaning" %}{% include "includes/pricing_copy.html" with which="surface" %}{% endif %}
+  <a class="button" href="{% url 'contact' %}#quote-form" data-cta-location="service-pricing">Get a Quote</a></div></section>{% endif %}
 <article class="prose service-detail">
   <div class="service-copy">{{ object.body|safe }}</div>
   <div class="service-cta">
@@ -49,4 +85,5 @@
     <a class="button" href="sms:+13147751080">Text us</a>
   </div>
 </article>
+{% endif %}
 {% endblock %}

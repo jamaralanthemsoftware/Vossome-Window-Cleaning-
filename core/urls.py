@@ -11,6 +11,7 @@ from .views import (
     robots_txt,
     services,
     commercial,
+    lead_photo,
 )
 
 urlpatterns = [
@@ -19,6 +20,7 @@ urlpatterns = [
     path("robots.txt", robots_txt, name="robots-txt"),
     path("about/", about, name="about"),
     path("contact/", contact, name="contact"),
+    path("inquiries/photos/<int:pk>/", lead_photo, name="lead-photo"),
     path("faq/", faq, name="faq"),
     path("services/", services, name="services"),
     path(

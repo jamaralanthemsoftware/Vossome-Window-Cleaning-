@@ -1,0 +1,15 @@
+<section class="qb-snapshot" aria-labelledby="qb-snapshot-h">
+  <h3 id="qb-snapshot-h">Estimate we calculated from your entries</h3>
+  <ul>
+    {% for line in estimated_quote.services %}
+    <li class="qb-line qb-line--{{ line.status }}"><strong>{{ line.label }}</strong>
+      {% if line.amount %}<span class="qb-amount">${{ line.amount }} ballpark estimate</span>{% else %}<span class="qb-amount qb-amount--none">No amount yet</span>{% endif %}
+      {% if line.status == "review" %}<span class="qb-flag">Needs review</span>{% endif %}
+      {% if line.calculation %}<small>{{ line.calculation }}</small>{% endif %}
+      {% if line.reasons %}<ul class="qb-reasons">{% for r in line.reasons %}<li>{{ r }}</li>{% endfor %}</ul>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% if estimated_quote.complete %}<p class="qb-total">Estimated total: ${{ estimated_quote.estimated_subtotal }}</p>{% else %}<p class="qb-partial">Some items need review. Any calculated amounts above are partial estimates, not a complete total.</p>{% endif %}
+  <p class="field-hint">Estimates only. We confirm counts, measurements, and the exact price at your appointment, and you give the okay before we start.</p>
+</section>

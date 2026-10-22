@@ -2,20 +2,51 @@
 {% load static %}
 {% block open_graph_title %}{{ site_settings.default_open_graph_title|default:site_settings.site_name|default:"Client Website" }}{% endblock %}
 {% block open_graph_description %}{{ site_settings.default_open_graph_description|default:site_settings.default_meta_description|default:"" }}{% endblock %}
+{% block body_attributes %} class="home-design"{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/home-design.css' %}">{% endblock %}
 {% block content %}
-<section class="hero"><div class="hero-inner">
-  <p class="eyebrow">{{ site_settings.tagline|default:"Clean windows. Big Voss energy." }}</p>
-  <h1>We’re in the Happy Client Business</h1>
-  <p class="lead">Residential window cleaning, pressure washing, and exterior cleaning in St. Charles and nearby St. Louis communities—with clear communication, dependable service, and work people are proud to recommend.</p>
-  <div class="hero-actions"><a class="button orange" href="tel:+13147751080">Call us</a><a class="button secondary" href="sms:+13147751080">Text us</a></div>
-  <div class="hero-badge"><span>#awesomeVossome</span></div>
-</div>
+<section class="hero">
+  <div class="hero-layout">
+    <img class="hero-watermark" src="{% static 'images/logo.jpg' %}" alt="" aria-hidden="true">
+    <div class="hero-inner">
+      <img class="hero-logo" src="{% static 'images/logo.jpg' %}" alt="Vossome Window Cleaning logo">
+      <p class="eyebrow">{{ site_settings.tagline|default:"Clean windows. Big Voss energy." }}</p>
+      <h1>We’re in the <span class="headline-accent">Happy Client</span> <span class="headline-last">Business.</span></h1>
+      <p class="lead">Residential window cleaning, pressure washing, and exterior cleaning in St. Charles and nearby St. Louis communities—with clear communication, dependable service, and work people are proud to recommend.</p>
+      <div class="hero-actions">
+        <a class="button orange" href="sms:+13147751080">Text us <span aria-hidden="true">↗</span></a>
+        <a class="button secondary" href="tel:+13147751080">Call us <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+    <div class="hero-art" role="img" aria-label="Illustration of sparkling clean windows">
+      <div class="window-scene" aria-hidden="true"><div class="window-sky"></div><div class="window-cross-x"></div><div class="window-cross-y"></div><div class="window-shine"></div></div>
+      <div class="art-callout" aria-hidden="true">Wait...<br><span>are the windows open?</span></div>
+      <div class="hero-badge" aria-hidden="true"><span>#awesomeVossome</span></div>
+      <span class="art-caption" aria-hidden="true">Nope. They’re just that clean.</span>
+    </div>
+  </div>
 </section>
 <section class="trust-ribbon" aria-label="Why customers choose Vossome">
   <a class="reviews-link" href="https://share.google/BAmvmaufaIzyEPUQI" target="_blank" rel="noopener noreferrer" aria-label="Read Vossome customer reviews on Google (opens in a new tab)">★ Read our Google reviews ↗</a>
   <span>★ Clear communication</span>
   <span>★ Local &amp; family owned</span>
   <span>★ Fully insured</span>
+</section>
+<section class="section promo-section">
+  <div class="promo-panel">
+    <div class="promo-copy">
+      <p class="eyebrow">Where Vossome began</p>
+      <h2>A family story.<br><span>A company standard.</span></h2>
+      <p class="lead">Matt and Julie built Vossome around a simple idea: every part of the job should leave the client happy.</p>
+      <p>More than 10 years later, that idea guides the whole company—from the first call and clear quote to the care shown at your property and the final look at the work.</p>
+      <div class="standard-badge"><strong>Friendly. Reliable. Thorough.</strong><span>That’s the Vossome way.</span></div>
+      <a class="button orange" href="{% url 'about' %}">Read the Vossome story <span aria-hidden="true">↗</span></a>
+    </div>
+    <div class="promo-photo">
+      <img src="{% static 'images/family.jpg' %}" alt="The Voss family">
+      <span class="photo-sticker" aria-hidden="true">Family owned. People first.</span>
+    </div>
+  </div>
 </section>
 <section class="section customer-reviews" aria-labelledby="customer-reviews-heading">
   <div class="section-heading"><p class="eyebrow">From happy clients</p><h2 id="customer-reviews-heading">The reviews are in.</h2><p>Hear it from neighbors who invited Vossome to their homes.</p></div>
@@ -25,21 +56,6 @@
     <figure><div class="review-stars" aria-label="5 out of 5 stars">★★★★★</div><blockquote>“Efficient, friendly and they do a great job cleaning windows, in and out, even in 33 degree weather. We will definitely hire them again!”</blockquote><figcaption>Twila Loy · Google review</figcaption></figure>
   </div>
   <p><a class="button" href="https://share.google/BAmvmaufaIzyEPUQI" target="_blank" rel="noopener noreferrer">See all reviews on Google ↗</a></p>
-</section>
-<section class="section promo-section">
-  <div class="promo-panel">
-    <div class="promo-copy">
-      <p class="eyebrow">Where Vossome began</p>
-      <h2>A family story.<br>A company standard.</h2>
-      <p class="lead">Matt and Julie built Vossome around a simple idea: every part of the job should leave the client happy.</p>
-      <p>More than 10 years later, that idea guides the whole company—from the first call and clear quote to the care shown at your property and the final look at the work.</p>
-      <div class="standard-badge"><strong>Friendly. Reliable. Thorough.</strong><span>That’s the Vossome way.</span></div>
-      <a class="button orange" href="{% url 'about' %}">Read the Vossome story</a>
-    </div>
-    <div class="promo-photo">
-      <img src="{% static 'images/family.jpg' %}" alt="The Voss family">
-    </div>
-  </div>
 </section>
 <section class="section commercial-promo" aria-label="Commercial Services">
   <div class="split commercial-split">

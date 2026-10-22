@@ -15,14 +15,22 @@
 <section class="pricing-panel" aria-labelledby="simple-pricing-title">
   <div class="pricing-copy">
     <p class="eyebrow">Simple pricing</p>
-    <h2 id="simple-pricing-title">Standard windows: $100 to come out + $10 per window</h2>
-    <p class="lead">Includes the whole window: insides, outsides, screens, sills, and tracks.</p>
-    <p>Our pricing formula is simple and easy to understand. We’ll confirm your exact quote before work begins.</p>
-    <a class="button orange" href="sms:+13147751080">Text us for your exact quote</a>
+    <h2 id="simple-pricing-title">Windows</h2>
+    {% include "includes/pricing_copy.html" with which="window" %}
+    {% include "includes/pricing_copy.html" with which="window_support" %}
+    <a class="button orange" href="{% url 'contact' %}#quote-form" data-cta-location="services-pricing">Get a Quote</a>
   </div>
   <div class="service-art">
     <img src="{% static 'images/windows-exterior.jpg' %}" alt="Clean windows on a local home">
   </div>
+</section>
+<section class="pricing-grid" aria-labelledby="more-pricing-title">
+  <h2 id="more-pricing-title">The rest of the price list</h2>
+  <article><h3>Gutters</h3>{% include "includes/pricing_copy.html" with which="gutter" %}</article>
+  <article><h3>House washing</h3>{% include "includes/pricing_copy.html" with which="house" %}</article>
+  <article><h3>Driveways, patios &amp; walkways</h3>{% include "includes/pricing_copy.html" with which="surface" %}</article>
+  <article><h3>Decks</h3>{% include "includes/pricing_copy.html" with which="deck" %}<p class="price-note">Stairs and underside cleaning are reviewed individually and are not part of the ballpark.</p></article>
+  <p class="pricing-cta"><a class="button" href="{% url 'contact' %}#quote-form" data-cta-location="services-grid">Try the calculators</a></p>
 </section>
 {% if services %}
   <section class="grid" aria-label="Services">

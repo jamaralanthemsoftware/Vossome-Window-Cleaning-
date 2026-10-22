@@ -1,0 +1,47 @@
+/* Pricing-first quote form. Palette from the logo: amber, sky, indigo. */
+.contact-layout{align-items:start}
+.quote-builder{padding:clamp(1.1rem,3vw,2.2rem);min-width:0}
+.quote-builder fieldset{min-width:0;border:0;padding:0;margin:0 0 1.2rem}
+.quote-builder legend{font-family:"Barlow Condensed",Impact,sans-serif;font-size:1.7rem;font-weight:900;text-transform:uppercase;color:var(--indigo);padding:0;margin-bottom:.3rem}
+.qb-services ul,.choice-field ul{list-style:none;margin:0;padding:0;display:grid;gap:.5rem}
+.choice-field label{display:flex;gap:.7rem;align-items:flex-start;padding:12px 14px;min-height:48px;background:var(--surface);border:2px solid var(--ink);border-radius:5px;cursor:pointer;transition:background-color .15s ease}
+.choice-field label:hover,.choice-field label:has(input:checked){background:var(--amber-soft)}
+.choice-field label:has(input:focus-visible){outline:3px solid var(--indigo);outline-offset:2px}
+.qb-panels{display:grid;gap:1.1rem;margin:1.2rem 0}
+.qb-panel{background:var(--sky-soft);border:3px solid var(--ink);border-left-width:10px;border-left-color:var(--yellow);padding:clamp(1rem,3vw,1.6rem);box-shadow:5px 5px 0 var(--sky);animation:qb-in .22s ease-out}
+.qb-panel[hidden],.qb-underside[hidden],.qb-live:empty{display:none}
+.qb-panel h3{margin:0 0 .7rem;font-size:2rem;color:var(--ink)}
+.qb-panel p{margin:.5rem 0}
+.qb-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.9rem;margin:.8rem 0}
+.qb-field{margin:.7rem 0}.qb-pair .qb-field{margin:0}.qb-field label{display:block;margin-bottom:.3rem}
+.qb-check{margin:.8rem 0}
+.qb-check-label{display:flex;gap:.7rem;align-items:flex-start;min-height:44px;cursor:pointer;font-weight:700}
+.qb-check-label input{width:1.4rem;height:1.4rem;flex:none;margin:.1rem 0 0;accent-color:var(--indigo)}
+.choice-field input[type=radio],.choice-field input[type=checkbox],.consent-field input{width:1.3rem;height:1.3rem;flex:none;accent-color:var(--indigo)}
+.qb-live{font-weight:800;background:var(--surface);border:2px dashed var(--indigo);padding:10px 12px;margin:.8rem 0}
+.qb-underside{background:var(--surface);border-left:5px solid var(--yellow);padding:.4rem 1rem;margin:.8rem 0}
+.qb-photo-flag{font-weight:800;color:var(--indigo)}
+.qb-summary,.qb-snapshot{background:var(--surface);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--yellow);padding:1.1rem;margin:1.4rem 0}
+.qb-snapshot ul,.qb-lines{list-style:none;margin:0;padding:0;display:grid;gap:.7rem}
+.qb-summary-head{margin-bottom:.9rem;padding-bottom:.8rem;border-bottom:2px solid var(--line)}
+.qb-kicker{margin:0;font-weight:800;text-transform:uppercase;letter-spacing:.05em;font-size:.8rem;color:var(--muted)}
+.qb-total{margin:0;font:900 clamp(2.4rem,9vw,3.6rem)/1 "Barlow Condensed",Impact,sans-serif;color:var(--indigo)}
+.qb-partial-amount{margin:0;font:900 1.7rem/1.1 "Barlow Condensed",Impact,sans-serif;color:var(--ink)}
+.qb-review-note{margin:.4rem 0 0;font-weight:700;color:#7a4a00}
+.qb-line{padding:.7rem .8rem;background:var(--sky-soft);border-left:6px solid var(--sky)}
+.qb-line--review{background:#fff3d1;border-left-color:var(--yellow)}
+.qb-line-top{display:flex;justify-content:space-between;gap:.8rem;flex-wrap:wrap}
+.qb-amount{font-weight:900;color:var(--indigo)}.qb-amount--none{color:var(--muted);font-weight:700}
+.qb-flag{display:inline-block;margin:.3rem 0;padding:2px 8px;background:var(--yellow);border:2px solid var(--ink);font:800 .85rem "Barlow Condensed",Impact,sans-serif;text-transform:uppercase;letter-spacing:.05em}
+.qb-line small{display:block;color:var(--ink);line-height:1.45}
+.qb-reasons{margin:.4rem 0 0 1.1rem!important;padding:0;list-style:disc!important;font-size:.9rem;display:block!important}
+.qb-fine,.qb-summary-empty{font-size:.9rem;color:var(--muted);margin:.7rem 0 0}
+.qb-details{margin-top:1.8rem;padding-top:1.4rem;border-top:3px dashed var(--ink)}
+.qb-step{font-size:2.2rem;margin:0 0 .6rem}
+.qb-reassure{background:var(--amber-soft);border-left:6px solid var(--indigo);padding:.5rem 1rem;margin-bottom:1.2rem}
+.is-required label::after{content:" (required)";font-weight:600;color:var(--muted);font-size:.85em}
+.qb-photos input[type=file]{width:100%;padding:10px;border:2px dashed var(--ink);background:var(--surface);border-radius:5px;font:inherit}
+.form-assurance{font-size:.9rem;color:var(--muted)}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.form-field--wide{grid-column:1/-1}
+@media(max-width:640px){.qb-pair,.form-grid{grid-template-columns:1fr}.qb-panel{border-left-width:6px}}
+@keyframes qb-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}

@@ -14,6 +14,9 @@ jobs:
         with:
           python-version: "3.13"
           cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - run: pip install -r requirements.txt
       - run: python manage.py check
         env:
@@ -27,3 +30,20 @@ jobs:
       - run: python manage.py collectstatic --noinput
         env:
           DJANGO_SETTINGS_MODULE: config.settings.build
+      - name: Check service layouts at phone and desktop widths
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+          SECRET_KEY: ci-window-layout-only
+          CHROMIUM_PATH: /usr/bin/google-chrome
+          WINDOW_CHECK_URL: http://127.0.0.1:8000/services/window-cleaning/
+        run: |
+          export SQLITE_PATH="$RUNNER_TEMP/window-layout.sqlite3"
+          python manage.py migrate --noinput
+          python manage.py runserver --noreload 127.0.0.1:8000 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --output /dev/null "$WINDOW_CHECK_URL"; then break; fi
+            sleep 1
+          done
+          node scripts/check_window_responsive.mjs

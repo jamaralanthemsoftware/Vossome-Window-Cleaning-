@@ -8,15 +8,18 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.mail import EmailMessage
 from django.db import IntegrityError, transaction
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import redirect, render
+from django.http import FileResponse, HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib.admin.views.decorators import staff_member_required
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET
 from django.views.generic import DetailView
 
 from .anthem import deliver_lead_to_anthem
 from .forms import LeadForm
-from .models import ContactSubmissionThrottle, FAQ, Page, Service
+from .models import ContactSubmissionThrottle, FAQ, Page, Service, Lead, LeadPhoto
+from .pricing import estimate_lines
 from .recaptcha import get_contact_recaptcha_config, verify_contact_recaptcha
 
 
@@ -79,12 +82,18 @@ def _contact_context(request, form, recaptcha_config):
         "recaptcha_site_key": (
             recaptcha_config.site_key if recaptcha_config else ""
         ),
+        "estimated_quote": getattr(form, "estimated_quote", None),
     }
 
 
-def send_lead_notification(lead):
+def send_lead_notification(lead, photos=()):
+    """Send transient photo attachments; never persist new customer photos."""
     if not settings.LEAD_NOTIFICATION_EMAIL:
-        return
+        lead.email_notification_status = "disabled"
+        lead.save(update_fields=["email_notification_status"])
+        for photo in photos:
+            photo.close()
+        return False
 
     consent = "Yes" if lead.consent_to_contact else "No"
     body = "\n".join(
@@ -95,6 +104,7 @@ def send_lead_notification(lead):
             f"Last name: {lead.last_name}",
             f"Email: {lead.email}",
             f"Phone: {lead.phone or 'Not provided'}",
+            f"Service address: {lead.service_address}",
             f"Services: {', '.join(lead.selected_service_labels) or 'Not specified'}",
             f"Deck material: {lead.get_deck_material_display() or 'Not specified'}",
             f"Preferred reply: {lead.get_preferred_reply_method_display() or 'No preference'}",
@@ -103,6 +113,16 @@ def send_lead_notification(lead):
             "",
             "Message:",
             lead.message,
+            "",
+            "Pricing details (customer measurements are approximate):",
+            *[f"{key.replace('_', ' ').capitalize()}: {value}" for key, value in lead.quote_details.items() if value not in (None, "")],
+            "",
+            estimate_lines(lead.estimate_snapshot),
+            "",
+            f"Photos: {len(photos)} JPEG attachment(s)." if photos else "No photos supplied.",
+            "Customer photos are emailed as attachments, not retained by the website.",
+            "",
+            "This is an inquiry, not a booked appointment or marketing subscription.",
         ]
     )
     message = EmailMessage(
@@ -110,12 +130,35 @@ def send_lead_notification(lead):
         body=body,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[settings.LEAD_NOTIFICATION_EMAIL],
-        reply_to=[lead.email],
+        reply_to=[lead.email] if lead.email else [],
     )
     try:
-        message.send(fail_silently=False)
+        for index, photo in enumerate(photos, start=1):
+            photo.seek(0)
+            message.attach(f"project-photo-{index}.jpg", photo.read(), "image/jpeg")
+        if message.send(fail_silently=False) != 1:
+            raise RuntimeError("The email backend did not accept the notification.")
+        lead.email_notification_status = "sent"
     except Exception:
         logger.exception("Lead notification email failed for lead_id=%s", lead.pk)
+        lead.email_notification_status = "failed"
+    finally:
+        for photo in photos:
+            photo.close()
+    lead.save(update_fields=["email_notification_status"])
+    return lead.email_notification_status == "sent"
+
+
+@staff_member_required
+@require_GET
+def lead_photo(request, pk):
+    photo = get_object_or_404(LeadPhoto, pk=pk)
+    if not request.user.has_perm("core.view_lead"):
+        return HttpResponse(status=403)
+    response = FileResponse(photo.image.open("rb"), as_attachment=True, filename="vossome-project-photo.jpg")
+    response["Cache-Control"] = "private, no-store"
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
 
 
 @require_GET
@@ -183,6 +226,7 @@ def contact(request):
     submission_token = _contact_submission_token(request)
     form = LeadForm(
         request.POST or None,
+        request.FILES or None,
         initial={"submission_token": submission_token},
         expected_submission_token=submission_token,
     )
@@ -215,18 +259,34 @@ def contact(request):
         lead = form.save(commit=False)
         lead.source = request.POST.get("source", "website")[:120]
         lead.submission_token = form.cleaned_data["submission_token"]
+        photos = form.cleaned_data.get("photos", [])
+        if photos:
+            lead.quote_details["photo_count"] = len(photos)
+            lead.quote_details["photo_handling"] = "Email attachments only; not retained by website."
         try:
             with transaction.atomic():
                 lead.save()
         except IntegrityError:
-            messages.success(request, "Thank you. Your message has been received.")
+            messages.success(request, "Your request has been received. A real human on the Vossome team will review it and follow up. No appointment has been booked.")
             request.session["contact_submitted"] = True
             request.session.pop(CONTACT_SUBMISSION_TOKEN_KEY, None)
             return redirect("contact")
+        except Exception:
+            logger.exception("Inquiry save failed; no email or CRM submission was attempted.")
+            form.add_error(None, "We couldn’t save your request or photos. Please try again, or text or call the team. If you selected photos, please select them again.")
+            return render(request, "contact.html", _contact_context(request, form, recaptcha_config), status=503)
         request.session.pop(CONTACT_SUBMISSION_TOKEN_KEY, None)
-        deliver_lead_to_anthem(lead.pk)
-        send_lead_notification(lead)
-        messages.success(request, "Thank you. Your message has been received.")
+        # Keep this form's CRM handoff unchanged until explicitly enabled.
+        lead.anthem_delivery_status = Lead.AnthemDeliveryStatus.NEEDS_REVIEW
+        lead.anthem_error_summary = "Quote inquiry saved; automatic CRM handoff is not enabled for this form."
+        lead.save(update_fields=["anthem_delivery_status", "anthem_error_summary"])
+        emailed = send_lead_notification(lead, photos)
+        if not emailed:
+            if photos:
+                messages.warning(request, "Your project details were saved, but we couldn’t email your photos. The website has not retained them. Please text or email the photos directly to Vossome.")
+            else:
+                messages.warning(request, "Your project details were saved, but we couldn’t send the team’s email notification. Please text or call Vossome to make sure the team can follow up.")
+        messages.success(request, "Your request has been received. A real human on the Vossome team will review it and follow up. No appointment has been booked.")
         request.session["contact_submitted"] = True
         return redirect("contact")
     return render(

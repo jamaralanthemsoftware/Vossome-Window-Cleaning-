@@ -15,6 +15,8 @@ def contact_payload(client, **overrides):
     payload = {
         "first_name": "Happy",
         "last_name": "Client",
+        "service_address": "123 Example Street, St. Charles, MO",
+        "preferred_reply_method": "email",
         "email": "client@example.com",
         "phone": "(314) 555-0100",
         "service_interest": "window-cleaning",
@@ -32,7 +34,9 @@ class PublicSiteStructureTests(TestCase):
         services_response = self.client.get(reverse("services"))
         about_response = self.client.get(reverse("about"))
 
-        self.assertContains(home_response, "We’re in the Happy Client Business")
+        self.assertContains(home_response, "We’re in the ")
+        self.assertContains(home_response, 'class="headline-accent">Happy Client</span>')
+        self.assertContains(home_response, 'class="headline-last">Business.</span>')
         self.assertContains(home_response, "The Vossome standard")
         self.assertContains(services_response, "A consistent experience, every visit.")
         self.assertContains(about_response, "Customers should know what to expect from Vossome")
@@ -237,7 +241,7 @@ class PublicSiteStructureTests(TestCase):
         self.assertIn("Window Cleaning, Pressure Washing, Other", mail.outbox[0].body)
         self.assertIn("Preferred reply: Text", mail.outbox[0].body)
 
-    def test_deck_material_required_and_wood_preserved_for_review(self):
+    def test_deck_material_optional_and_wood_preserved_for_review(self):
         payload = contact_payload(
             self.client,
             services=["deck-cleaning"],
@@ -245,23 +249,84 @@ class PublicSiteStructureTests(TestCase):
             deck_material="",
         )
         invalid = self.client.post(reverse("contact"), payload)
-        self.assertEqual(invalid.status_code, 200)
-        self.assertContains(invalid, "Please choose composite or wood")
-        self.assertFalse(Lead.objects.filter(email="client@example.com").exists())
+        self.assertEqual(invalid.status_code, 302)
+        self.assertEqual(Lead.objects.get(email="client@example.com").estimate_snapshot["services"][0]["status"], "review")
 
+        payload = contact_payload(self.client, services=["deck-cleaning"], service_interest="", email="wood@example.com")
         payload["deck_material"] = "wood"
         valid = self.client.post(reverse("contact"), payload)
         self.assertRedirects(valid, reverse("contact"))
-        lead = Lead.objects.get(email="client@example.com")
+        lead = Lead.objects.get(email="wood@example.com")
         self.assertEqual(lead.selected_services, ["deck-cleaning"])
         self.assertEqual(lead.deck_material, "wood")
 
     def test_window_cleaning_page_has_approved_prices_and_commercial_link(self):
         response = self.client.get(reverse("service-detail", kwargs={"slug": "window-cleaning"}))
         self.assertContains(response, "MEANWHILE... THE NUMBERS!")
-        self.assertContains(response, "$100 visit + $10 per window")
-        self.assertContains(response, "$100 visit + $7 per window")
+        self.assertContains(response, "Standard pricing on standard windows is $100 to come out + $10 per window.")
+        self.assertNotContains(response, "$7 per window")
         self.assertContains(response, f'href="{reverse("commercial")}"')
+        self.assertContains(response, 'id="pricing"')
+        self.assertContains(response, "css/window-design.css")
+
+    def test_window_design_renders_updated_cms_content_without_replacing_prices(self):
+        service = Service.objects.get(slug="window-cleaning")
+        service.summary = "A new summary written in the CMS."
+        service.body = (
+            "<h2>Fresh heading from the editor</h2>"
+            "<p>Custom CMS description and a <a href='/services/'>service link</a>.</p>"
+            "<section class='window-pricing'><h2>Today's prices</h2>"
+            "<p>$100 visit + $10 per window</p></section>"
+            "<h2>Another chapter</h2><p>Extra details from the editor.</p>"
+        )
+        service.save()
+        response = self.client.get(service.get_absolute_url())
+        self.assertContains(response, service.summary)
+        self.assertContains(response, "Fresh heading from the editor")
+        self.assertContains(response, "Extra details from the editor.")
+        self.assertContains(response, "$100 visit + $10 per window")
+        self.assertContains(response, "href='/services/'")
+        self.assertContains(response, 'id="pricing"')
+
+    def test_window_chapters_keep_their_design_after_cms_reordering(self):
+        service = Service.objects.get(slug="window-cleaning")
+        # Move existing marked HTML, rename a heading, insert an unmarked
+        # chapter, and change a price just as an editor would.
+        body = service.body
+        intro, rest = body.split('<section class="window-pricing"', 1)
+        pricing, rest = rest.split("</section>", 1)
+        adventure, rest = rest.split('<h2 data-window-chapter="transparent"', 1)
+        transparent, rest = rest.split('<h2 data-window-chapter="way"', 1)
+        way, ready = rest.split('<h2 data-window-chapter="ready"', 1)
+        service.body = (
+            '<h2>New editorial chapter</h2><p>New copy stays visible.</p>'
+            + '<h2 data-window-chapter="way"' + way
+            + intro.replace("Wait... are the windows open?", "Look at that view!")
+            + '<h2 data-window-chapter="ready"' + ready
+            + '<section class="window-pricing"' + pricing.replace(
+                "$100 to come out + $10 per window", "$125 visit + $11 per window"
+            ) + "</section>"
+            + adventure
+            + '<h2 data-window-chapter="transparent"' + transparent
+        )
+        service.save()
+
+        response = self.client.get(service.get_absolute_url())
+        html = response.content.decode()
+        self.assertContains(response, "New copy stays visible.")
+        self.assertContains(response, "Look at that view!")
+        self.assertContains(response, "$125 visit + $11 per window")
+        self.assertNotIn("$100 to come out + $10 per window", html.split("<article", 1)[1])
+        self.assertLess(html.index("window-other"), html.index("window-way"))
+        self.assertLess(html.index("window-way"), html.index("window-intro"))
+        self.assertLess(html.index("window-intro"), html.index("window-ready"))
+        self.assertLess(html.index("window-ready"), html.index("window-pricing"))
+        self.assertLess(html.index("window-pricing"), html.index("window-adventure"))
+        self.assertLess(html.index("window-adventure"), html.index("window-transparent"))
+        self.assertEqual(html.count('id="pricing"'), 1)
+        self.assertEqual(html.count("window-final-action"), 1)
+        self.assertLess(html.index("window-ready"), html.index("window-final-action"))
+        self.assertLess(html.index("window-final-action"), html.index("window-pricing"))
 
     @override_settings(
         ENABLE_RECAPTCHA=True,
@@ -382,7 +447,7 @@ class PublicSiteStructureTests(TestCase):
         self.assertEqual(first.status_code, 302)
         self.assertEqual(second.status_code, 200)
         self.assertEqual(Lead.objects.filter(email="client@example.com").count(), 1)
-        deliver_to_anthem.assert_called_once()
+        deliver_to_anthem.assert_not_called()
         send_email.assert_called_once()
 
     @patch("core.views.deliver_lead_to_anthem")
@@ -407,7 +472,7 @@ class PublicSiteStructureTests(TestCase):
 
         self.assertEqual(responses[-1].status_code, 429)
         self.assertEqual(Lead.objects.count(), 10)
-        self.assertEqual(deliver_to_anthem.call_count, 10)
+        self.assertEqual(deliver_to_anthem.call_count, 0)
         self.assertEqual(send_email.call_count, 10)
 
     @override_settings(TRUST_PROXY_CLIENT_IP_HEADER=True)
@@ -439,13 +504,13 @@ class PublicSiteStructureTests(TestCase):
             Lead.objects.filter(email__startswith="forwarded-").count(),
             10,
         )
-        self.assertEqual(deliver_to_anthem.call_count, 10)
+        self.assertEqual(deliver_to_anthem.call_count, 0)
         self.assertEqual(send_email.call_count, 10)
 
     def test_header_and_footer_include_required_navigation(self):
         response = self.client.get(reverse("home"))
 
-        for label in ["Home", "About us", "Services", "FAQ", "Get a free quote"]:
+        for label in ["Home", "About us", "Services", "FAQ", "Get a Quote"]:
             with self.subTest(label=label):
                 self.assertContains(response, label)
 

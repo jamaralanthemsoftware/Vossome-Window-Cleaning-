@@ -593,6 +593,8 @@ class GoogleIntegrationTests(TestCase):
             {
                 "first_name": "Vossome",
                 "last_name": "Customer",
+                "service_address": "123 Test Street, St. Charles, MO",
+                "preferred_reply_method": "email",
                 "email": "customer@example.com",
                 "phone": "3145550100",
                 "service_interest": "window-cleaning",
