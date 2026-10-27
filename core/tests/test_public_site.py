@@ -6,8 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from core.models import FAQ, Lead, Page, RecaptchaIntegration, Service
-from core.models import FAQ, Page, Service, SiteSettings
+from core.models import BlogPost, FAQ, Lead, Page, RecaptchaIntegration, Service, SiteSettings
 
 
 def contact_payload(client, **overrides):
@@ -510,9 +509,18 @@ class PublicSiteStructureTests(TestCase):
     def test_header_and_footer_include_required_navigation(self):
         response = self.client.get(reverse("home"))
 
-        for label in ["Home", "About us", "Services", "FAQ", "Get a Quote"]:
+        for label in ["Home", "About us", "Services", "FAQ", "Blog", "Get a Quote"]:
             with self.subTest(label=label):
                 self.assertContains(response, label)
+        self.assertContains(
+            response,
+            '<nav aria-label="Footer navigation"><h3>Explore</h3>'
+            f'<a href="{reverse("blog")}">Blog</a>'
+            f'<a href="{reverse("services")}">Services</a>'
+            f'<a href="{reverse("faq")}">FAQ</a>'
+            "</nav>",
+            html=True,
+        )
 
     def test_header_quote_link_is_the_only_contact_form_link_on_conversion_pages(self):
         pages = [self.client.get(reverse("home")), self.client.get(reverse("services"))]
@@ -669,3 +677,386 @@ class PublicSiteStructureTests(TestCase):
         self.assertContains(response, "<h2>Useful heading</h2>", html=True)
         self.assertContains(response, "<p>Readable page information.</p>", html=True)
         self.assertNotContains(response, "&lt;p&gt;")
+
+    def test_seeded_pricing_guide_blog_renders_with_seo_metadata_and_sitemap(self):
+        post = BlogPost.objects.get(slug="professional-window-cleaning-cost-guide")
+        post.full_clean()
+        self.assertTrue(post.is_published)
+        self.assertEqual(post.primary_keyword, "professional window cleaning cost")
+
+        list_response = self.client.get(reverse("blog"))
+        self.assertEqual(list_response.status_code, 200)
+        self.assertContains(list_response, post.title)
+        self.assertContains(list_response, post.get_absolute_url())
+
+        detail_response = self.client.get(post.get_absolute_url())
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertContains(
+            detail_response,
+            "<title>Professional Window Cleaning Cost Guide | Prices &amp; Estimates</title>",
+            html=True,
+        )
+        self.assertContains(
+            detail_response,
+            'name="description" content="How much does professional window cleaning cost? Explore typical prices per window, square foot rates, add-on costs, and what to expect on your estimate."',
+        )
+        self.assertContains(detail_response, 'property="og:type" content="article"')
+        self.assertContains(detail_response, "Average Window Cleaning Costs at a Glance")
+        self.assertContains(detail_response, "The 3 Most Common Window Cleaning Pricing Models")
+        self.assertContains(detail_response, "Enjoy Clear, Streak-Free Views with Vossome Window Cleaning")
+
+        sitemap_response = self.client.get(reverse("sitemap"))
+        self.assertEqual(sitemap_response.status_code, 200)
+        self.assertContains(sitemap_response, post.get_absolute_url())
+
+    def test_seeded_hard_water_stain_blog_renders_with_seo_metadata_and_sitemap(self):
+        post = BlogPost.objects.get(slug="how-to-remove-hard-water-stains-from-windows")
+        post.full_clean()
+        self.assertTrue(post.is_published)
+        self.assertEqual(post.primary_keyword, "how to remove hard water stains from windows")
+
+        list_response = self.client.get(reverse("blog"))
+        self.assertEqual(list_response.status_code, 200)
+        self.assertContains(list_response, post.title)
+        self.assertContains(list_response, post.get_absolute_url())
+
+        detail_response = self.client.get(post.get_absolute_url())
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertContains(
+            detail_response,
+            "<title>How to Remove Hard Water Stains from Windows | DIY &amp; Pro Guide</title>",
+            html=True,
+        )
+        self.assertContains(
+            detail_response,
+            'name="description" content="Struggling with stubborn white spots on your glass? Learn how to remove hard water stains from windows safely without scratching or permanently damaging your panes."',
+        )
+        self.assertContains(detail_response, 'property="og:type" content="article"')
+        self.assertContains(detail_response, "Why Do Hard Water Stains Form on Exterior Windows?")
+        self.assertContains(detail_response, "Stage 1 vs. Stage 2 Damage: Staining vs. Glass Etching")
+        self.assertContains(detail_response, "Restore Your Glass to Crystal Clarity with Vossome Window Cleaning")
+        # Also verify the sidebar links to Blog #1 in More Homeowner Guides
+        self.assertContains(detail_response, "/blog/professional-window-cleaning-cost-guide/")
+
+        sitemap_response = self.client.get(reverse("sitemap"))
+        self.assertEqual(sitemap_response.status_code, 200)
+        self.assertContains(sitemap_response, post.get_absolute_url())
+
+    def test_seeded_pressure_vs_soft_washing_blog_renders_with_seo_metadata_and_sitemap(self):
+        post = BlogPost.objects.get(slug="pressure-washing-vs-soft-washing")
+        post.full_clean()
+        self.assertTrue(post.is_published)
+        self.assertEqual(post.primary_keyword, "pressure washing vs soft washing")
+
+        list_response = self.client.get(reverse("blog"))
+        self.assertEqual(list_response.status_code, 200)
+        self.assertContains(list_response, post.title)
+        self.assertContains(list_response, post.get_absolute_url())
+
+        detail_response = self.client.get(post.get_absolute_url())
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertContains(
+            detail_response,
+            "<title>Pressure Washing vs. Soft Washing | Which Does Your Home Need?</title>",
+            html=True,
+        )
+        self.assertContains(
+            detail_response,
+            'name="description" content="Confused about pressure washing vs. soft washing? Learn the key differences in PSI, cleaning solutions, and which surfaces require low-pressure soft washing."',
+        )
+        self.assertContains(detail_response, 'property="og:type" content="article"')
+        self.assertContains(detail_response, "Quick Comparison: Pressure Washing vs. Soft Washing at a Glance")
+        self.assertContains(detail_response, "Surface-by-Surface Guide: Which Method Should You Use?")
+        self.assertContains(detail_response, "Protect and Beautify Your Home with Vossome Window Cleaning")
+        self.assertContains(detail_response, "/blog/professional-window-cleaning-cost-guide/")
+        self.assertContains(detail_response, "/blog/how-to-remove-hard-water-stains-from-windows/")
+
+        sitemap_response = self.client.get(reverse("sitemap"))
+        self.assertEqual(sitemap_response.status_code, 200)
+        self.assertContains(sitemap_response, post.get_absolute_url())
+
+    def test_seeded_pressure_washing_cost_blog_renders_with_seo_metadata_and_sitemap(self):
+        post = BlogPost.objects.get(slug="how-much-does-it-cost-to-pressure-wash-a-house")
+        post.full_clean()
+        self.assertTrue(post.is_published)
+        self.assertEqual(post.primary_keyword, "how much does it cost to pressure wash a house")
+
+        list_response = self.client.get(reverse("blog"))
+        self.assertEqual(list_response.status_code, 200)
+        self.assertContains(
+            list_response,
+            "The Complete Cost Guide to House Pressure Washing &amp; Driveway Cleaning",
+        )
+        self.assertContains(list_response, post.get_absolute_url())
+
+        detail_response = self.client.get(post.get_absolute_url())
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertContains(
+            detail_response,
+            "<title>How Much Does It Cost to Pressure Wash a House? (Pricing Guide)</title>",
+            html=True,
+        )
+        self.assertContains(
+            detail_response,
+            'name="description" content="Wondering how much does it cost to pressure wash a house or driveway? See average prices per square foot, siding rates, and bundle discounts in our complete guide."',
+        )
+        self.assertContains(detail_response, 'property="og:type" content="article"')
+        self.assertContains(detail_response, "Average House Pressure Washing Costs by Home Size")
+        self.assertContains(detail_response, "Driveway, Sidewalk, and Concrete Patio Pressure Washing Costs")
+        self.assertContains(detail_response, "Get a Fast, Transparent Pressure Washing Quote from Vossome Window Cleaning")
+        self.assertContains(detail_response, "/blog/pressure-washing-vs-soft-washing/")
+
+        sitemap_response = self.client.get(reverse("sitemap"))
+        self.assertEqual(sitemap_response.status_code, 200)
+        self.assertContains(sitemap_response, post.get_absolute_url())
+
+    def test_seeded_neglected_gutters_blog_renders_with_seo_metadata_and_sitemap(self):
+        post = BlogPost.objects.get(slug="what-happens-if-you-dont-clean-gutters")
+        post.full_clean()
+        self.assertTrue(post.is_published)
+        self.assertEqual(post.primary_keyword, "what happens if you don't clean gutters")
+
+        list_response = self.client.get(reverse("blog"))
+        self.assertEqual(list_response.status_code, 200)
+        self.assertContains(list_response, post.title)
+        self.assertContains(list_response, post.get_absolute_url())
+
+        detail_response = self.client.get(post.get_absolute_url())
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertContains(
+            detail_response,
+            "<title>What Happens If You Don’t Clean Your Gutters? 7 Costly Disasters</title>",
+            html=True,
+        )
+        self.assertContains(
+            detail_response,
+            'name="description" content="Wondering what happens if you don&#x27;t clean gutters? From cracked foundations and basement leaks to roof rot, see how a simple cleaning prevents $10k+ in repairs."',
+        )
+        self.assertContains(detail_response, 'property="og:type" content="article"')
+        self.assertContains(detail_response, "Cost Comparison: Routine Gutter Cleaning vs. Neglect Repairs")
+        self.assertContains(detail_response, "The Domino Effect of a Clogged Downspout")
+        self.assertContains(detail_response, "6 Warning Signs Your Gutters Are Secretly Clogged Right Now")
+        self.assertContains(detail_response, "Protect Your Roof and Foundation with Vossome Window Cleaning")
+        self.assertContains(detail_response, "/services/gutter-cleaning/")
+
+        sitemap_response = self.client.get(reverse("sitemap"))
+        self.assertEqual(sitemap_response.status_code, 200)
+        self.assertContains(sitemap_response, post.get_absolute_url())
+
+    def test_seeded_gutter_cleaning_cost_blog_renders_with_seo_metadata_and_sitemap(self):
+        post = BlogPost.objects.get(slug="gutter-cleaning-cost-per-foot")
+        post.full_clean()
+        self.assertTrue(post.is_published)
+        self.assertEqual(post.primary_keyword, "gutter cleaning cost per foot")
+
+        list_response = self.client.get(reverse("blog"))
+        self.assertEqual(list_response.status_code, 200)
+        self.assertContains(list_response, post.title)
+        self.assertContains(list_response, post.get_absolute_url())
+
+        detail_response = self.client.get(post.get_absolute_url())
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertContains(
+            detail_response,
+            "<title>Gutter Cleaning Cost Per Foot | 1, 2 &amp; 3-Story Price Guide</title>",
+            html=True,
+        )
+        self.assertContains(
+            detail_response,
+            'name="description" content="What is the average gutter cleaning cost per foot? See transparent 1-, 2-, and 3-story gutter cleaning prices, downspout flushing rates, and how to save."',
+        )
+        self.assertContains(detail_response, 'property="og:type" content="article"')
+        self.assertContains(detail_response, "Average Gutter Cleaning Costs at a Glance (By Home Stories &amp; Footage)")
+        self.assertContains(detail_response, "6 Key Factors That Influence Gutter Cleaning Prices")
+        self.assertContains(detail_response, "Get a Fast, Honest Gutter Cleaning Estimate from Vossome Window Cleaning")
+        self.assertContains(detail_response, "/blog/what-happens-if-you-dont-clean-gutters/")
+
+        sitemap_response = self.client.get(reverse("sitemap"))
+        self.assertEqual(sitemap_response.status_code, 200)
+        self.assertContains(sitemap_response, post.get_absolute_url())
+
+    def test_seeded_concrete_patio_stain_blog_renders_with_seo_metadata_and_sitemap(self):
+        post = BlogPost.objects.get(slug="how-to-clean-concrete-patio-without-pressure-washer")
+        post.full_clean()
+        self.assertTrue(post.is_published)
+        self.assertEqual(post.primary_keyword, "how to clean concrete patio without pressure washer")
+
+        list_response = self.client.get(reverse("blog"))
+        self.assertEqual(list_response.status_code, 200)
+        self.assertContains(list_response, post.title)
+        self.assertContains(list_response, post.get_absolute_url())
+
+        detail_response = self.client.get(post.get_absolute_url())
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertContains(
+            detail_response,
+            "<title>How to Clean a Concrete Patio Without a Pressure Washer (Stain Guide)</title>",
+            html=True,
+        )
+        self.assertContains(
+            detail_response,
+            'name="description" content="Learn how to clean a concrete patio without a pressure washer! Discover the best DIY scrubs for green algae, black mold, leaf stains, grease, and rust."',
+        )
+        self.assertContains(detail_response, 'property="og:type" content="article"')
+        self.assertContains(detail_response, "Why Does Concrete Stain So Easily? (The Rigid Sponge Effect)")
+        self.assertContains(detail_response, "The Ultimate Patio Stain Removal Guide: 6 Common Stains &amp; How to Dissolve Them")
+        self.assertContains(detail_response, "Save Your Back and Restore Your Patio with Vossome Window Cleaning")
+        self.assertContains(detail_response, "/services/concrete-patio-cleaning/")
+
+        sitemap_response = self.client.get(reverse("sitemap"))
+        self.assertEqual(sitemap_response.status_code, 200)
+        self.assertContains(sitemap_response, post.get_absolute_url())
+
+    def test_seeded_concrete_damage_blog_renders_with_seo_metadata_and_sitemap(self):
+        post = BlogPost.objects.get(slug="can-pressure-washing-damage-concrete")
+        post.full_clean()
+        self.assertTrue(post.is_published)
+        self.assertEqual(post.primary_keyword, "can pressure washing damage concrete")
+
+        list_response = self.client.get(reverse("blog"))
+        self.assertEqual(list_response.status_code, 200)
+        self.assertContains(list_response, post.title)
+        self.assertContains(list_response, post.get_absolute_url())
+
+        detail_response = self.client.get(post.get_absolute_url())
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertContains(
+            detail_response,
+            "<title>Can Pressure Washing Damage Concrete? Avoiding Etching &amp; Scars</title>",
+            html=True,
+        )
+        self.assertContains(
+            detail_response,
+            'name="description" content="Can pressure washing damage concrete? Learn how high PSI causes concrete etching, wand stripes, and spalling—plus how pros clean patios and driveways safely."',
+        )
+        self.assertContains(detail_response, 'property="og:type" content="article"')
+        self.assertContains(detail_response, "4 Types of Concrete Damage Caused by Improper Pressure Washing")
+        self.assertContains(detail_response, "The 5 Biggest Mistakes That Ruin Concrete Patios and Driveways")
+        self.assertContains(detail_response, "Safe PSI Guidelines by Concrete Type")
+        self.assertContains(detail_response, "Trust Your Concrete Patio &amp; Driveway to Vossome Window Cleaning")
+        self.assertContains(detail_response, "/blog/how-to-clean-concrete-patio-without-pressure-washer/")
+
+        sitemap_response = self.client.get(reverse("sitemap"))
+        self.assertEqual(sitemap_response.status_code, 200)
+        self.assertContains(sitemap_response, post.get_absolute_url())
+
+    def test_seeded_spring_maintenance_checklist_blog_renders_with_seo_metadata_and_sitemap(self):
+        post = BlogPost.objects.get(slug="spring-exterior-home-maintenance-checklist")
+        post.full_clean()
+        self.assertTrue(post.is_published)
+        self.assertEqual(post.primary_keyword, "spring exterior home maintenance checklist")
+
+        list_response = self.client.get(reverse("blog"))
+        self.assertEqual(list_response.status_code, 200)
+        self.assertContains(
+            list_response,
+            "The Ultimate Spring Exterior Home Maintenance Checklist: Windows, Gutters, Siding &amp; Patios",
+        )
+        self.assertContains(list_response, post.get_absolute_url())
+
+        detail_response = self.client.get(post.get_absolute_url())
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertContains(
+            detail_response,
+            "<title>Spring Exterior Home Maintenance Checklist | Complete Guide</title>",
+            html=True,
+        )
+        self.assertContains(
+            detail_response,
+            'name="description" content="Follow our ultimate spring exterior home maintenance checklist to protect your roof, gutters, siding, windows, and concrete patio after winter weather."',
+        )
+        self.assertContains(detail_response, 'property="og:type" content="article"')
+        self.assertContains(detail_response, "Why the Order of Your Spring Exterior Cleaning Matters")
+        self.assertContains(detail_response, "Master Printable Summary: Your Spring Exterior Maintenance Schedule")
+        self.assertContains(detail_response, "Check Off Your Entire Spring List in One Afternoon with Vossome Window Cleaning")
+        self.assertContains(detail_response, "/blog/can-pressure-washing-damage-concrete/")
+
+        sitemap_response = self.client.get(reverse("sitemap"))
+        self.assertEqual(sitemap_response.status_code, 200)
+        self.assertContains(sitemap_response, post.get_absolute_url())
+
+    def test_seeded_fall_maintenance_checklist_blog_renders_with_seo_metadata_and_sitemap(self):
+        post = BlogPost.objects.get(slug="fall-gutter-and-roof-maintenance-checklist")
+        post.full_clean()
+        self.assertTrue(post.is_published)
+        self.assertEqual(post.primary_keyword, "fall gutter and roof maintenance checklist")
+
+        list_response = self.client.get(reverse("blog"))
+        self.assertEqual(list_response.status_code, 200)
+        self.assertContains(list_response, post.title)
+        self.assertContains(list_response, post.get_absolute_url())
+
+        detail_response = self.client.get(post.get_absolute_url())
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertContains(
+            detail_response,
+            "<title>Fall Gutter &amp; Roof Maintenance Checklist | Winter Prep Guide</title>",
+            html=True,
+        )
+        self.assertContains(
+            detail_response,
+            'name="description" content="Follow our essential fall gutter and roof maintenance checklist! Learn how to prevent ice dams, protect concrete patios from spalling, and prep your home for winter."',
+        )
+        self.assertContains(detail_response, 'property="og:type" content="article"')
+        self.assertContains(detail_response, "Priority #1: The Fall Gutter and Roof Maintenance Checklist")
+        self.assertContains(detail_response, "Chronological Fall Exterior Maintenance Timeline (September &ndash; December)")
+        self.assertContains(detail_response, "Prepare Your Home for Winter with Vossome Window Cleaning")
+        self.assertContains(detail_response, "/blog/spring-exterior-home-maintenance-checklist/")
+
+        sitemap_response = self.client.get(reverse("sitemap"))
+        self.assertEqual(sitemap_response.status_code, 200)
+        self.assertContains(sitemap_response, post.get_absolute_url())
+
+    def test_all_blog_pages_render_hero_section_with_associated_image_and_overlaid_title(self):
+        list_response = self.client.get(reverse("blog"))
+        self.assertEqual(list_response.status_code, 200)
+        self.assertContains(list_response, 'class="blog-hero blog-hero--index"')
+        self.assertContains(list_response, 'class="blog-hero-bg"')
+        self.assertContains(list_response, 'class="blog-hero-shade"')
+        self.assertContains(list_response, "<h1>Clear Advice for a Brighter View.</h1>", html=True)
+        self.assertContains(list_response, 'class="blog-grid blog-card-grid"')
+        self.assertContains(list_response, 'class="blog-card__media"')
+        self.assertContains(list_response, 'class="blog-card__image"')
+        self.assertContains(list_response, 'class="blog-card__overlay"')
+        self.assertContains(list_response, 'class="blog-card__content"')
+
+        expected_dates = [
+            ("professional-window-cleaning-cost-guide", "October 26th, 2026"),
+            ("how-to-remove-hard-water-stains-from-windows", "October 23rd, 2026"),
+            ("pressure-washing-vs-soft-washing", "October 20th, 2026"),
+            ("how-much-does-it-cost-to-pressure-wash-a-house", "October 17th, 2026"),
+            ("what-happens-if-you-dont-clean-gutters", "October 14th, 2026"),
+            ("gutter-cleaning-cost-per-foot", "October 11th, 2026"),
+            ("how-to-clean-concrete-patio-without-pressure-washer", "October 8th, 2026"),
+            ("can-pressure-washing-damage-concrete", "October 5th, 2026"),
+            ("spring-exterior-home-maintenance-checklist", "October 2nd, 2026"),
+            ("fall-gutter-and-roof-maintenance-checklist", "September 29th, 2026"),
+        ]
+        published_posts = list(BlogPost.objects.filter(is_published=True))
+        self.assertEqual(
+            [p.slug for p in published_posts],
+            [slug for slug, _ in expected_dates],
+        )
+        expected_date_by_slug = dict(expected_dates)
+        for post in published_posts:
+            expected_date = expected_date_by_slug[post.slug]
+            self.assertTrue(post.hero_image_static)
+            self.assertTrue(post.hero_image_alt)
+            self.assertContains(list_response, post.hero_image_static)
+            self.assertContains(list_response, expected_date)
+            self.assertContains(
+                list_response,
+                f'<h2 class="blog-card__title" itemprop="headline">{post.title}</h2>',
+                html=True,
+            )
+            response = self.client.get(post.get_absolute_url())
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, f'class="blog-hero blog-hero--{post.slug}"')
+            self.assertContains(response, 'class="blog-hero-bg"')
+            self.assertContains(response, 'class="blog-hero-shade"')
+            self.assertContains(response, post.hero_image_static)
+            self.assertContains(response, expected_date)
+            self.assertContains(response, f'<h1 itemprop="headline">{post.title}</h1>', html=True)
+            self.assertContains(response, 'class="blog-related-section"')
+
+

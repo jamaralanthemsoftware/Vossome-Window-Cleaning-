@@ -7,6 +7,7 @@ from django.utils.html import format_html_join
 
 from .models import (
     AnthemIntegration,
+    BlogPost,
     DownloadableAsset,
     FAQ,
     GoogleIntegration,
@@ -211,6 +212,36 @@ class ServiceAdmin(admin.ModelAdmin):
         (
             "Publishing",
             {"fields": ["is_published", "published_at", "display_order"]},
+        ),
+    ]
+
+
+@admin.register(BlogPost)
+class BlogPostAdmin(admin.ModelAdmin):
+    list_display = ["title", "slug", "primary_keyword", "word_count", "is_published", "published_at", "updated_at"]
+    list_filter = ["is_published", "published_at"]
+    search_fields = ["title", "summary", "body", "primary_keyword", "secondary_keywords"]
+    prepopulated_fields = {"slug": ("title",)}
+    readonly_fields = ["word_count"]
+    fieldsets = [
+        ("Content", {"fields": ["title", "slug", "summary", "body", "word_count"]}),
+        (
+            "Search and social sharing",
+            {
+                "fields": [
+                    "primary_keyword",
+                    "secondary_keywords",
+                    "meta_title",
+                    "meta_description",
+                    "open_graph_title",
+                    "open_graph_description",
+                    "open_graph_image",
+                ]
+            },
+        ),
+        (
+            "Publishing",
+            {"fields": ["is_published", "published_at"]},
         ),
     ]
 

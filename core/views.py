@@ -18,7 +18,7 @@ from django.views.generic import DetailView
 
 from .anthem import deliver_lead_to_anthem
 from .forms import LeadForm
-from .models import ContactSubmissionThrottle, FAQ, Page, Service, Lead, LeadPhoto
+from .models import BlogPost, ContactSubmissionThrottle, FAQ, Page, Service, Lead, LeadPhoto
 from .pricing import estimate_lines
 from .recaptcha import get_contact_recaptcha_config, verify_contact_recaptcha
 
@@ -203,6 +203,30 @@ def faq(request):
         "faq.html",
         {"faqs": FAQ.objects.filter(is_published=True)},
     )
+
+
+def blog_list(request):
+    return render(
+        request,
+        "blog_list.html",
+        {"posts": BlogPost.objects.filter(is_published=True)},
+    )
+
+
+class BlogPostDetailView(DetailView):
+    model = BlogPost
+    template_name = "blog_detail.html"
+
+    def get_queryset(self):
+        return BlogPost.objects.filter(is_published=True)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["recent_posts"] = (
+            BlogPost.objects.filter(is_published=True)
+            .exclude(pk=self.object.pk)[:10]
+        )
+        return context
 
 
 class PageDetailView(DetailView):

@@ -314,6 +314,114 @@ class Service(PublishableModel):
         return reverse("service-detail", kwargs={"slug": self.slug})
 
 
+class BlogPost(PublishableModel):
+    HERO_IMAGE_MAP = {
+        "professional-window-cleaning-cost-guide": (
+            "images/service-window-cleaning.webp",
+            "Clean exterior windows on a well-kept residential home",
+        ),
+        "how-to-remove-hard-water-stains-from-windows": (
+            "images/water.jpg",
+            "Close-up of water droplets and mineral moisture on exterior window glass",
+        ),
+        "pressure-washing-vs-soft-washing": (
+            "images/service-pressure-washing.jpg",
+            "Professional technician soft washing residential house siding",
+        ),
+        "how-much-does-it-cost-to-pressure-wash-a-house": (
+            "images/service-pressure-washing.webp",
+            "Professional pressure washing on a residential driveway and home exterior",
+        ),
+        "what-happens-if-you-dont-clean-gutters": (
+            "images/service-gutter-cleaning.webp",
+            "Autumn oak leaves clogging a residential roof gutter",
+        ),
+        "gutter-cleaning-cost-per-foot": (
+            "images/service-gutter-cleaning.jpg",
+            "Professional technician on a ladder cleaning residential roof gutters",
+        ),
+        "how-to-clean-concrete-patio-without-pressure-washer": (
+            "images/service-concrete-patio-cleaning.webp",
+            "Residential backyard patio being cleaned in warm evening light",
+        ),
+        "can-pressure-washing-damage-concrete": (
+            "images/service-concrete-patio-cleaning.jpg",
+            "Technician operating a commercial rotary surface cleaner on a stained concrete patio",
+        ),
+        "spring-exterior-home-maintenance-checklist": (
+            "images/windows-exterior.jpg",
+            "Bright two-story residential home surrounded by lush spring foliage and clean windows",
+        ),
+        "fall-gutter-and-roof-maintenance-checklist": (
+            "images/blog-fall-exterior.webp",
+            "Two-story Midwest home surrounded by golden and crimson autumn trees with clean gutters and windows",
+        ),
+    }
+
+    slug = models.SlugField(max_length=120, unique=True)
+    meta_description = models.CharField(max_length=200, blank=True)
+    primary_keyword = models.CharField(max_length=120, blank=True)
+    secondary_keywords = models.CharField(max_length=300, blank=True)
+
+    class Meta:
+        ordering = ["-published_at", "-created_at", "title"]
+        verbose_name = "blog post"
+        verbose_name_plural = "blog posts"
+
+    @property
+    def reading_time_minutes(self):
+        return max(1, round(self.word_count / 200))
+
+    def _resolve_hero_image(self):
+        if self.slug in self.HERO_IMAGE_MAP:
+            return self.HERO_IMAGE_MAP[self.slug]
+        haystack = f"{self.slug} {self.primary_keyword} {self.title}".lower()
+        if "gutter" in haystack:
+            return (
+                "images/service-gutter-cleaning.jpg",
+                "Professional gutter cleaning on a residential home",
+            )
+        if "patio" in haystack or "concrete" in haystack:
+            return (
+                "images/service-concrete-patio-cleaning.webp",
+                "Residential concrete patio cleaning",
+            )
+        if "pressure" in haystack or "soft wash" in haystack:
+            return (
+                "images/service-pressure-washing.webp",
+                "Professional exterior house and driveway washing",
+            )
+        if "hard water" in haystack:
+            return (
+                "images/water.jpg",
+                "Water droplets on exterior window glass",
+            )
+        if "fall" in haystack or "autumn" in haystack:
+            return (
+                "images/blog-fall-exterior.webp",
+                "Midwest residential home in autumn with clean gutters and windows",
+            )
+        return (
+            "images/service-window-cleaning.webp",
+            "Clean residential exterior windows in the St. Charles area",
+        )
+
+    @property
+    def hero_image_static(self):
+        return self._resolve_hero_image()[0]
+
+    @property
+    def hero_image_alt(self):
+        return self._resolve_hero_image()[1]
+
+    def clean(self):
+        super(PublishableModel, self).clean()
+        self._populate_metadata_defaults()
+
+    def get_absolute_url(self):
+        return reverse("blog-detail", kwargs={"slug": self.slug})
+
+
 class FAQ(TimeStampedModel):
     question = models.CharField(max_length=240)
     answer = models.TextField()

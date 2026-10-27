@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% load static site_tags %}
+{% block title %}{{ object.seo_title }}{% endblock %}
+{% block meta_description %}{{ object.seo_description }}{% endblock %}
+{% block open_graph_type %}article{% endblock %}
+{% block open_graph_title %}{{ object.resolved_open_graph_title }}{% endblock %}
+{% block open_graph_description %}{{ object.resolved_open_graph_description }}{% endblock %}
+{% block twitter_title %}{{ object.resolved_open_graph_title }}{% endblock %}
+{% block twitter_description %}{{ object.resolved_open_graph_description }}{% endblock %}
+{% block open_graph_image %}
+  {% if object.open_graph_image %}
+    <meta property="og:image" content="{{ object.open_graph_image.url|absolute_url:request }}">
+    <meta property="og:image:alt" content="{{ object.resolved_open_graph_title }}">
+  {% else %}
+    {% static object.hero_image_static as hero_static_url %}
+    <meta property="og:image" content="{{ hero_static_url|absolute_url:request }}">
+    <meta property="og:image:alt" content="{{ object.hero_image_alt }}">
+  {% endif %}
+{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/blog.css' %}">{% endblock %}
+{% block content %}
+<div itemscope itemtype="https://schema.org/BlogPosting">
+  <section class="blog-hero blog-hero--{{ object.slug }}">
+    {% if object.open_graph_image %}
+      <img class="blog-hero-bg" src="{{ object.open_graph_image.url }}" alt="{{ object.hero_image_alt }}" itemprop="image">
+    {% else %}
+      <img class="blog-hero-bg" src="{% static object.hero_image_static %}" alt="{{ object.hero_image_alt }}" itemprop="image">
+    {% endif %}
+    <div class="blog-hero-shade" aria-hidden="true"></div>
+    <div class="blog-hero-inner">
+      <nav class="blog-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'home' %}">Home</a>
+        <span aria-hidden="true">/</span>
+        <a href="{% url 'blog' %}">Blog</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{{ object.primary_keyword|default:"Homeowner Guide"|title }}</span>
+      </nav>
+      <h1 itemprop="headline">{{ object.title }}</h1>
+      {% if object.summary %}
+        <p class="lead" itemprop="description">{{ object.summary }}</p>
+      {% endif %}
+      <div class="blog-meta-bar">
+        <span class="blog-badge">Vossome Homeowner Guide</span>
+        {% if object.published_at %}
+          <span class="blog-meta-item">Published <time datetime="{{ object.published_at|date:'Y-m-d' }}" itemprop="datePublished">{{ object.published_at|date:"F jS, Y" }}</time></span>
+        {% endif %}
+        <span class="blog-meta-item">{{ object.reading_time_minutes }} min read</span>
+        <span class="blog-meta-item" itemprop="author" itemscope itemtype="https://schema.org/Organization">By <span itemprop="name">Vossome Window Cleaning</span></span>
+      </div>
+    </div>
+  </section>
+
+  <div class="blog-layout">
+    <article class="blog-article" itemprop="articleBody">
+      {{ object.body|safe }}
+    </article>
+
+    <aside class="blog-sidebar" aria-label="Article resources and quote options">
+      <div class="blog-sidebar-card blog-sidebar-card--dark">
+        <h2>Want Exact Numbers for Your Home?</h2>
+        <p>Standard residential window cleaning with Vossome is <strong>$100 to come out + $10 per window</strong>—including insides, outsides, screens, sills, and tracks.</p>
+        <p>We serve St. Charles County, St. Louis County, O'Fallon, St. Peters, Chesterfield, and Lake St. Louis.</p>
+        <div class="blog-sidebar-actions">
+          <a class="button orange" href="{% url 'contact' %}#quote-form">Get a Quote</a>
+          <a class="button secondary" href="sms:+13147751080">Text (314) 775-1080</a>
+          <a class="button secondary" href="tel:+13147751080">Call (314) 775-1080</a>
+        </div>
+      </div>
+
+      <div class="blog-sidebar-card">
+        <h3>Explore Vossome Services</h3>
+        <ul class="blog-toc">
+          <li><a href="{% url 'service-detail' slug='window-cleaning' %}">Residential Window Cleaning</a></li>
+          <li><a href="{% url 'service-detail' slug='pressure-washing' %}">House Washing &amp; Pressure Washing</a></li>
+          <li><a href="{% url 'service-detail' slug='gutter-cleaning' %}">Gutter Cleaning</a></li>
+          <li><a href="{% url 'service-detail' slug='concrete-patio-cleaning' %}">Concrete &amp; Patio Cleaning</a></li>
+          <li><a href="{% url 'commercial' %}">Brighter View Commercial Windows</a></li>
+        </ul>
+      </div>
+
+      {% if recent_posts %}
+        <div class="blog-sidebar-card">
+          <h3>More Homeowner Guides</h3>
+          <ul class="blog-toc">
+            {% for related in recent_posts %}
+              <li><a href="{{ related.get_absolute_url }}">{{ related.title }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    </aside>
+  </div>
+
+  {% if recent_posts %}
+    <section class="blog-related-section" aria-label="Related reading">
+      <h2>Related Reading</h2>
+      <div class="blog-grid blog-card-grid">
+        {% for related in recent_posts|slice:":3" %}
+          <article class="blog-card">
+            <a class="blog-card__link" href="{{ related.get_absolute_url }}">
+              <div class="blog-card__media">
+                {% if related.open_graph_image %}
+                  <img class="blog-card__image" src="{{ related.open_graph_image.url }}" alt="{{ related.hero_image_alt }}" loading="lazy">
+                {% else %}
+                  <img class="blog-card__image" src="{% static related.hero_image_static %}" alt="{{ related.hero_image_alt }}" loading="lazy">
+                {% endif %}
+                <div class="blog-card__overlay" aria-hidden="true"></div>
+              </div>
+              <div class="blog-card__content">
+                <p class="blog-card__meta">
+                  {% if related.published_at %}
+                    <time datetime="{{ related.published_at|date:'Y-m-d' }}">{{ related.published_at|date:"F jS, Y" }}</time>
+                    <span aria-hidden="true">•</span>
+                  {% endif %}
+                  <span>{{ related.reading_time_minutes }} min read</span>
+                </p>
+                <h3 class="blog-card__title">{{ related.title }}</h3>
+                {% if related.summary %}
+                  <p class="blog-card__excerpt">{{ related.summary|truncatechars:135 }}</p>
+                {% endif %}
+                <span class="blog-card__action">Read article <span aria-hidden="true">→</span></span>
+              </div>
+            </a>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+</div>
+{% endblock %}

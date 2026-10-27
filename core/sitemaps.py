@@ -1,7 +1,7 @@
 from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
 
-from .models import Page, Service
+from .models import BlogPost, Page, Service
 
 
 class PublishedContentSitemap(Sitemap):
@@ -20,6 +20,11 @@ class PageSitemap(PublishedContentSitemap):
 class ServiceSitemap(PublishedContentSitemap):
     def items(self):
         return Service.objects.filter(is_published=True)
+
+
+class BlogSitemap(PublishedContentSitemap):
+    def items(self):
+        return BlogPost.objects.filter(is_published=True)
 
 
 class CommercialSitemap(Sitemap):

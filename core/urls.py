@@ -1,9 +1,11 @@
 from django.urls import path
 
 from .views import (
+    BlogPostDetailView,
     PageDetailView,
     ServiceDetailView,
     about,
+    blog_list,
     contact,
     faq,
     healthz,
@@ -23,6 +25,8 @@ urlpatterns = [
     path("inquiries/photos/<int:pk>/", lead_photo, name="lead-photo"),
     path("faq/", faq, name="faq"),
     path("services/", services, name="services"),
+    path("blog/", blog_list, name="blog"),
+    path("blog/<slug:slug>/", BlogPostDetailView.as_view(), name="blog-detail"),
     path(
         "commercial-window-cleaning/",
         commercial,

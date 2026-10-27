@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Window &amp; Exterior Cleaning Blog | {{ site_settings.site_name|default:"Vossome Window Cleaning" }}{% endblock %}
+{% block meta_description %}Practical homeowner guides, transparent pricing breakdowns, and exterior maintenance advice from Vossome Window Cleaning in St. Charles, Missouri.{% endblock %}
+{% block open_graph_title %}Window &amp; Exterior Cleaning Blog | {{ site_settings.site_name|default:"Vossome Window Cleaning" }}{% endblock %}
+{% block open_graph_description %}Practical homeowner guides, transparent pricing breakdowns, and exterior maintenance advice from Vossome Window Cleaning in St. Charles, Missouri.{% endblock %}
+{% block twitter_title %}Window &amp; Exterior Cleaning Blog | {{ site_settings.site_name|default:"Vossome Window Cleaning" }}{% endblock %}
+{% block twitter_description %}Practical homeowner guides, transparent pricing breakdowns, and exterior maintenance advice from Vossome Window Cleaning in St. Charles, Missouri.{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/blog.css' %}">{% endblock %}
+{% block content %}
+<section class="blog-hero blog-hero--index">
+  <img class="blog-hero-bg" src="{% static 'images/windows-exterior.jpg' %}" alt="Spotless residential exterior windows reflecting trees in St. Charles, Missouri">
+  <div class="blog-hero-shade" aria-hidden="true"></div>
+  <div class="blog-hero-inner">
+    <p class="eyebrow">Vossome Homeowner Guides &amp; Blog</p>
+    <h1>Clear Advice for a Brighter View.</h1>
+    <p class="lead">Straightforward pricing guides, seasonal maintenance tips, and honest answers from the family-owned window and exterior cleaning team serving St. Charles and Greater St. Louis.</p>
+  </div>
+</section>
+
+<section class="blog-feed-section blog-list-section" aria-label="Blog articles">
+  {% if posts %}
+    <div class="blog-grid blog-card-grid">
+      {% for post in posts %}
+        <article class="blog-card" itemscope itemtype="https://schema.org/BlogPosting">
+          <a class="blog-card__link" href="{{ post.get_absolute_url }}" itemprop="url">
+            <div class="blog-card__media">
+              {% if post.open_graph_image %}
+                <img class="blog-card__image" src="{{ post.open_graph_image.url }}" alt="{{ post.hero_image_alt }}" loading="lazy" itemprop="image">
+              {% else %}
+                <img class="blog-card__image" src="{% static post.hero_image_static %}" alt="{{ post.hero_image_alt }}" loading="lazy" itemprop="image">
+              {% endif %}
+              <div class="blog-card__overlay" aria-hidden="true"></div>
+            </div>
+            <div class="blog-card__content">
+              <p class="blog-card__meta">
+                {% if post.published_at %}
+                  <time datetime="{{ post.published_at|date:'Y-m-d' }}" itemprop="datePublished">{{ post.published_at|date:"F jS, Y" }}</time>
+                  <span aria-hidden="true">•</span>
+                {% endif %}
+                <span>{{ post.reading_time_minutes }} min read</span>
+              </p>
+              <h2 class="blog-card__title" itemprop="headline">{{ post.title }}</h2>
+              {% if post.summary %}
+                <p class="blog-card__excerpt" itemprop="description">{{ post.summary|truncatechars:135 }}</p>
+              {% endif %}
+              <span class="blog-card__action">Read article <span aria-hidden="true">→</span></span>
+            </div>
+          </a>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="empty-state">New homeowner guides are on the way. Have a question about window cleaning or exterior washing right now? Call or text us at <a href="tel:13147751080">(314) 775-1080</a>.</p>
+  {% endif %}
+</section>
+{% endblock %}
