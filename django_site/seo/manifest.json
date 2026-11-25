@@ -1,0 +1,98 @@
+{
+  "contract_version": 1,
+  "site_id": "django-site-396",
+  "cms": "django-cms",
+  "content_root": "seo/pages",
+  "supported_languages": [
+    "en-us"
+  ],
+  "page_schema_version": 1,
+  "connector_compatibility": {
+    "minimum": "1.0.0",
+    "maximum": "1.x"
+  },
+  "operations": [
+    "read",
+    "validate",
+    "render"
+  ],
+  "capabilities": {
+    "seo_title": true,
+    "meta_description": true,
+    "focus_keyword": true,
+    "slug": true,
+    "canonical": true,
+    "robots_adv": true,
+    "og_title": true,
+    "og_description": true,
+    "og_image": true,
+    "og_type": true,
+    "og_url": true,
+    "twitter_title": true,
+    "twitter_description": true,
+    "twitter_card": true,
+    "noindex": true,
+    "nofollow": true,
+    "faq": true,
+    "media": true,
+    "routing": true
+  },
+  "bindings": [
+    {
+      "item_id": "page-home",
+      "language": "en-us",
+      "kind": "page",
+      "cms_ref": {
+        "reverse_id": "page-home"
+      }
+    },
+    {
+      "item_id": "page-about",
+      "language": "en-us",
+      "kind": "page",
+      "cms_ref": {
+        "reverse_id": "page-about"
+      }
+    },
+    {
+      "item_id": "page-services",
+      "language": "en-us",
+      "kind": "page",
+      "cms_ref": {
+        "reverse_id": "page-services"
+      }
+    },
+    {
+      "item_id": "page-commercial",
+      "language": "en-us",
+      "kind": "page",
+      "cms_ref": {
+        "reverse_id": "page-commercial"
+      }
+    },
+    {
+      "item_id": "page-faq",
+      "language": "en-us",
+      "kind": "page",
+      "cms_ref": {
+        "reverse_id": "page-faq"
+      }
+    },
+    {
+      "item_id": "page-contact",
+      "language": "en-us",
+      "kind": "page",
+      "cms_ref": {
+        "reverse_id": "page-contact"
+      }
+    },
+    {
+      "item_id": "page-blog",
+      "language": "en-us",
+      "kind": "page",
+      "cms_ref": {
+        "reverse_id": "page-blog"
+      }
+    }
+  ]
+}

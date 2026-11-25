@@ -2,13 +2,17 @@
 {% load static site_tags %}
 {% block title %}{{ object.seo_title }}{% endblock %}
 {% block meta_description %}{{ object.seo_description }}{% endblock %}
+{% block canonical_url %}{{ object.canonical_url|default:request.build_absolute_uri }}{% endblock %}
 {% block open_graph_type %}article{% endblock %}
 {% block open_graph_title %}{{ object.resolved_open_graph_title }}{% endblock %}
 {% block open_graph_description %}{{ object.resolved_open_graph_description }}{% endblock %}
 {% block twitter_title %}{{ object.resolved_open_graph_title }}{% endblock %}
 {% block twitter_description %}{{ object.resolved_open_graph_description }}{% endblock %}
 {% block open_graph_image %}
-  {% if object.open_graph_image %}
+  {% if object.featured_image %}
+    <meta property="og:image" content="{{ object.featured_image.url|absolute_url:request }}">
+    <meta property="og:image:alt" content="{{ object.resolved_open_graph_title }}">
+  {% elif object.open_graph_image %}
     <meta property="og:image" content="{{ object.open_graph_image.url|absolute_url:request }}">
     <meta property="og:image:alt" content="{{ object.resolved_open_graph_title }}">
   {% else %}
@@ -21,7 +25,9 @@
 {% block content %}
 <div itemscope itemtype="https://schema.org/BlogPosting">
   <section class="blog-hero blog-hero--{{ object.slug }}">
-    {% if object.open_graph_image %}
+    {% if object.featured_image %}
+      <img class="blog-hero-bg" src="{{ object.featured_image.url }}" alt="{{ object.hero_image_alt }}" itemprop="image">
+    {% elif object.open_graph_image %}
       <img class="blog-hero-bg" src="{{ object.open_graph_image.url }}" alt="{{ object.hero_image_alt }}" itemprop="image">
     {% else %}
       <img class="blog-hero-bg" src="{% static object.hero_image_static %}" alt="{{ object.hero_image_alt }}" itemprop="image">
@@ -45,7 +51,7 @@
           <span class="blog-meta-item">Published <time datetime="{{ object.published_at|date:'Y-m-d' }}" itemprop="datePublished">{{ object.published_at|date:"F jS, Y" }}</time></span>
         {% endif %}
         <span class="blog-meta-item">{{ object.reading_time_minutes }} min read</span>
-        <span class="blog-meta-item" itemprop="author" itemscope itemtype="https://schema.org/Organization">By <span itemprop="name">Vossome Window Cleaning</span></span>
+        <span class="blog-meta-item" itemprop="author" itemscope itemtype="https://schema.org/Organization">By <span itemprop="name">{{ object.author_name|default:"Vossome Window Cleaning" }}</span></span>
       </div>
     </div>
   </section>
@@ -99,7 +105,9 @@
           <article class="blog-card">
             <a class="blog-card__link" href="{{ related.get_absolute_url }}">
               <div class="blog-card__media">
-                {% if related.open_graph_image %}
+                {% if related.featured_image %}
+                  <img class="blog-card__image" src="{{ related.featured_image.url }}" alt="{{ related.hero_image_alt }}" loading="lazy">
+                {% elif related.open_graph_image %}
                   <img class="blog-card__image" src="{{ related.open_graph_image.url }}" alt="{{ related.hero_image_alt }}" loading="lazy">
                 {% else %}
                   <img class="blog-card__image" src="{% static related.hero_image_static %}" alt="{{ related.hero_image_alt }}" loading="lazy">

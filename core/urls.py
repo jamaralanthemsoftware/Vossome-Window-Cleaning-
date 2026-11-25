@@ -1,5 +1,6 @@
 from django.urls import path
 
+from anthem_seo.views import managed_page
 from .views import (
     BlogPostDetailView,
     PageDetailView,
@@ -34,4 +35,5 @@ urlpatterns = [
     ),
     path("services/<slug:slug>/", ServiceDetailView.as_view(), name="service-detail"),
     path("<slug:slug>/", PageDetailView.as_view(), name="page-detail"),
+    path("<path:seo_path>/", managed_page, name="anthem-managed-page"),
 ]

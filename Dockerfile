@@ -11,7 +11,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
-RUN DJANGO_SETTINGS_MODULE=config.settings.build python manage.py collectstatic --noinput
+RUN DJANGO_SETTINGS_MODULE=config.settings.build python manage.py validate_anthem_seo \
+    && DJANGO_SETTINGS_MODULE=config.settings.build python manage.py collectstatic --noinput
 RUN chown -R appuser:appuser /app
 
 USER appuser

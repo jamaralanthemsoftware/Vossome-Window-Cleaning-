@@ -34,6 +34,9 @@ jobs:
       - run: python manage.py test
         env:
           DJANGO_SETTINGS_MODULE: config.settings.test
+      - run: python manage.py validate_anthem_seo
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.build
       - run: python manage.py collectstatic --noinput
         env:
           DJANGO_SETTINGS_MODULE: config.settings.build

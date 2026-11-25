@@ -9,3 +9,5 @@ whitenoise==6.9.0
 django-storages[s3]==1.14.6
 Pillow==11.3.0
 cryptography==50.0.1
+bleach==6.2.0
+defusedxml==0.7.1

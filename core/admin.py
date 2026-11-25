@@ -8,6 +8,7 @@ from django.utils.html import format_html_join
 from .models import (
     AnthemIntegration,
     BlogPost,
+    BlogTopic,
     DownloadableAsset,
     FAQ,
     GoogleIntegration,
@@ -216,15 +217,23 @@ class ServiceAdmin(admin.ModelAdmin):
     ]
 
 
+@admin.register(BlogTopic)
+class BlogTopicAdmin(admin.ModelAdmin):
+    list_display = ["name", "slug", "updated_at"]
+    search_fields = ["name", "slug"]
+    prepopulated_fields = {"slug": ("name",)}
+
+
 @admin.register(BlogPost)
 class BlogPostAdmin(admin.ModelAdmin):
     list_display = ["title", "slug", "primary_keyword", "word_count", "is_published", "published_at", "updated_at"]
-    list_filter = ["is_published", "published_at"]
-    search_fields = ["title", "summary", "body", "primary_keyword", "secondary_keywords"]
+    list_filter = ["is_published", "topics", "published_at"]
+    search_fields = ["title", "summary", "body", "primary_keyword", "secondary_keywords", "source_guid"]
     prepopulated_fields = {"slug": ("title",)}
+    filter_horizontal = ["topics"]
     readonly_fields = ["word_count"]
     fieldsets = [
-        ("Content", {"fields": ["title", "slug", "summary", "body", "word_count"]}),
+        ("Content", {"fields": ["title", "slug", "summary", "body", "word_count", "topics", "featured_image"]}),
         (
             "Search and social sharing",
             {
@@ -233,6 +242,7 @@ class BlogPostAdmin(admin.ModelAdmin):
                     "secondary_keywords",
                     "meta_title",
                     "meta_description",
+                    "canonical_url",
                     "open_graph_title",
                     "open_graph_description",
                     "open_graph_image",
@@ -240,8 +250,18 @@ class BlogPostAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "Publishing",
-            {"fields": ["is_published", "published_at"]},
+            "Publishing & Connector Source",
+            {
+                "fields": [
+                    "is_published",
+                    "published_at",
+                    "author_name",
+                    "source_guid",
+                    "source_url",
+                    "original_published_at",
+                    "original_modified_at",
+                ]
+            },
         ),
     ]
 

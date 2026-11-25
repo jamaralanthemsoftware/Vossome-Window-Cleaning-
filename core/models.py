@@ -314,6 +314,17 @@ class Service(PublishableModel):
         return reverse("service-detail", kwargs={"slug": self.slug})
 
 
+class BlogTopic(TimeStampedModel):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
 class BlogPost(PublishableModel):
     HERO_IMAGE_MAP = {
         "professional-window-cleaning-cost-guide": (
@@ -358,15 +369,42 @@ class BlogPost(PublishableModel):
         ),
     }
 
-    slug = models.SlugField(max_length=120, unique=True)
-    meta_description = models.CharField(max_length=200, blank=True)
+    title = models.CharField(max_length=240)
+    slug = models.SlugField(max_length=240, unique=True)
+    summary = models.CharField(max_length=500, blank=True)
+    meta_description = models.CharField(max_length=300, blank=True)
+    canonical_url = models.URLField(max_length=1000, blank=True)
+    source_url = models.URLField(max_length=1000, blank=True)
+    source_guid = models.CharField(max_length=1000, blank=True)
+    author_name = models.CharField(max_length=255, blank=True)
+    original_published_at = models.DateTimeField(null=True, blank=True)
+    original_modified_at = models.DateTimeField(null=True, blank=True)
+    featured_image = models.FileField(upload_to="blog-posts/%Y/%m/", blank=True)
     primary_keyword = models.CharField(max_length=120, blank=True)
     secondary_keywords = models.CharField(max_length=300, blank=True)
+    topics = models.ManyToManyField(
+        BlogTopic,
+        blank=True,
+        related_name="blog_posts",
+        help_text="Topics used to organize and recommend related articles.",
+    )
 
     class Meta:
-        ordering = ["-published_at", "-created_at", "title"]
+        ordering = ["-published_at", "-original_published_at", "-created_at", "title"]
         verbose_name = "blog post"
         verbose_name_plural = "blog posts"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["source_url"],
+                condition=~models.Q(source_url=""),
+                name="blogpost_unique_source_url",
+            ),
+            models.UniqueConstraint(
+                fields=["source_guid"],
+                condition=~models.Q(source_guid=""),
+                name="blogpost_unique_source_guid",
+            ),
+        ]
 
     @property
     def reading_time_minutes(self):
@@ -414,9 +452,20 @@ class BlogPost(PublishableModel):
     def hero_image_alt(self):
         return self._resolve_hero_image()[1]
 
+    @property
+    def publication_date(self):
+        return self.published_at or self.original_published_at or self.created_at
+
     def clean(self):
         super(PublishableModel, self).clean()
         self._populate_metadata_defaults()
+
+    def save(self, *args, **kwargs):
+        if self.original_published_at and not self.published_at:
+            self.published_at = self.original_published_at
+        elif self.published_at and not self.original_published_at:
+            self.original_published_at = self.published_at
+        return super().save(*args, **kwargs)
 
     def get_absolute_url(self):
         return reverse("blog-detail", kwargs={"slug": self.slug})

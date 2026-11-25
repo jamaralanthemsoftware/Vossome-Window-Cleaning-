@@ -54,6 +54,12 @@ services:
       - key: GOOGLE_OAUTH_CLIENT_SECRET
         type: SECRET
         scope: RUN_TIME
+      - key: EMM_PAIRING_CODE
+        type: SECRET
+        scope: RUN_TIME
+      - key: ANTHEM_SEO_DISCOVERY_TOKEN
+        type: SECRET
+        scope: RUN_TIME
 
 jobs:
   - name: migrate
@@ -64,7 +70,7 @@ jobs:
       deploy_on_push: true
     dockerfile_path: Dockerfile
     source_dir: /
-    run_command: python manage.py migrate --noinput
+    run_command: python manage.py validate_anthem_seo && python manage.py migrate --noinput && python manage.py validate_anthem_seo --strict
     instance_count: 1
     instance_size_slug: apps-s-1vcpu-0.5gb
     envs:

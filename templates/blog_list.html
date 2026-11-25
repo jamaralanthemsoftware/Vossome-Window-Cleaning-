@@ -25,7 +25,9 @@
         <article class="blog-card" itemscope itemtype="https://schema.org/BlogPosting">
           <a class="blog-card__link" href="{{ post.get_absolute_url }}" itemprop="url">
             <div class="blog-card__media">
-              {% if post.open_graph_image %}
+              {% if post.featured_image %}
+                <img class="blog-card__image" src="{{ post.featured_image.url }}" alt="{{ post.hero_image_alt }}" loading="lazy" itemprop="image">
+              {% elif post.open_graph_image %}
                 <img class="blog-card__image" src="{{ post.open_graph_image.url }}" alt="{{ post.hero_image_alt }}" loading="lazy" itemprop="image">
               {% else %}
                 <img class="blog-card__image" src="{% static post.hero_image_static %}" alt="{{ post.hero_image_alt }}" loading="lazy" itemprop="image">

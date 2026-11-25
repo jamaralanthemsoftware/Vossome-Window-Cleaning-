@@ -1,0 +1,13 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Anthem SEO override status</h1>
+{% if error %}<p class="errornote">{{ error }}</p>{% endif %}
+{% if bundle %}<p>Running bundle digest: <code>{{ bundle.digest }}</code></p>{% endif %}
+<table id="result_list">
+  <thead><tr><th>Bound page</th><th>Effective path</th><th>Raw overrides</th><th>Effective values</th><th>FAQ</th></tr></thead>
+  <tbody>{% for row in rows %}<tr>
+    <td>{{ row.item_id }}<br><small>{{ row.reverse_id }}</small></td><td>{{ row.effective_path }}</td>
+    <td><pre>{{ row.raw }}</pre></td><td><pre>{{ row.effective }}</pre></td><td>{{ row.faq_state }}{% if row.faq_conflict %} (CMS conflict){% endif %}</td>
+  </tr>{% empty %}<tr><td colspan="5">No CMS bindings were found.</td></tr>{% endfor %}</tbody>
+</table>
+{% endblock %}
