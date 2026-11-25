@@ -27,11 +27,18 @@ class Command(BaseCommand):
             action="store_true",
             help="Only decode/validate config without sending a live poll to Anthem CRM.",
         )
+        parser.add_argument(
+            "--site-url",
+            type=str,
+            default="",
+            help="Override the public site URL sent during connector registration and polling.",
+        )
 
     def handle(self, *args, **options):
         raw_code = (options["pairing_code"] or "").strip() or (
             getattr(settings, "EMM_PAIRING_CODE", "") or ""
         ).strip()
+        override_url = (options.get("site_url") or "").strip().rstrip("/")
 
         if raw_code:
             try:
@@ -41,13 +48,13 @@ class Command(BaseCommand):
             site_id = decoded["site_id"]
             endpoint = decoded["endpoint"] or resolve_emm_config()["endpoint"]
             secret = decoded["token"] or resolve_emm_config()["secret"]
-            site_url = decoded["home_url"] or resolve_emm_config()["home_url"]
+            site_url = override_url or decoded["home_url"] or resolve_emm_config()["home_url"]
         else:
             cfg = resolve_emm_config()
             site_id = cfg["site_id"]
             endpoint = cfg["endpoint"]
             secret = cfg["secret"]
-            site_url = cfg["home_url"]
+            site_url = override_url or cfg["home_url"]
 
         if not site_id or not secret:
             raise CommandError(

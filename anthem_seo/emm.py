@@ -143,6 +143,13 @@ def resolve_emm_config(*, auto_register: bool = False) -> dict:
         or decoded.get("site_id")
         or ""
     ).strip()
+    if not site_id:
+        try:
+            manifest_id = str(load_bundle()["manifest"].get("site_id") or "").strip()
+            if manifest_id and manifest_id != "djangocms-master-template":
+                site_id = manifest_id
+        except Exception:  # noqa: BLE001
+            pass
     endpoint = (
         os.environ.get("EMM_CONNECTOR_ENDPOINT")
         or getattr(settings, "EMM_CONNECTOR_ENDPOINT", "")
@@ -327,11 +334,11 @@ def _save_state(
         logger.debug("Could not persist EMM poll state to %s: %s", path, exc)
 
 
-def build_site_inventory() -> dict:
+def build_site_inventory(*, site_url: str | None = None) -> dict:
     """Build the ``fetch_site_inventory`` payload from CMS pages, services, and blog posts."""
     from core.models import BlogPost, BlogTopic
 
-    site_url = (public_site_url() or "").rstrip("/")
+    resolved_url = (site_url or public_site_url() or "").rstrip("/")
     try:
         bundle = load_bundle()
     except Exception:  # noqa: BLE001
@@ -343,7 +350,7 @@ def build_site_inventory() -> dict:
     for record in all_cms_records():
         path = effective_path(record, bundle=bundle) or "/"
         seen_paths.add(path)
-        full_url = f"{site_url}{path}" if site_url else path
+        full_url = f"{resolved_url}{path}" if resolved_url else path
         plain = " ".join(strip_tags(record.body_html or "").split())
         posts.append(
             {
@@ -367,7 +374,7 @@ def build_site_inventory() -> dict:
         if path in seen_paths:
             continue
         seen_paths.add(path)
-        full_url = f"{site_url}{path}" if site_url else path
+        full_url = f"{resolved_url}{path}" if resolved_url else path
         plain = " ".join(strip_tags(post.body or "").split())
         posts.append(
             {
@@ -454,7 +461,7 @@ def _update_model_metadata(target: dict, payload: dict) -> bool:
     return True
 
 
-def execute_command(command: dict) -> dict:
+def execute_command(command: dict, *, site_url: str | None = None) -> dict:
     """Execute one command returned by ``connectors/poll/``."""
     cmd_id = str(command.get("command_id") or "")
     cmd_type = str(command.get("type") or "")
@@ -466,7 +473,7 @@ def execute_command(command: dict) -> dict:
             "command_id": cmd_id,
             "type": cmd_type,
             "status": "applied",
-            "verified": build_site_inventory(),
+            "verified": build_site_inventory(site_url=site_url),
         }
 
     if cmd_type == "update_metadata":
@@ -560,7 +567,11 @@ def poll_once(
 
     commands = resp_data.get("commands") or []
     next_revision = str(resp_data.get("revision") or state["revision"])
-    results = [execute_command(cmd) for cmd in commands if isinstance(cmd, dict)]
+    results = [
+        execute_command(cmd, site_url=eff_site_url)
+        for cmd in commands
+        if isinstance(cmd, dict)
+    ]
     next_last_result = {"revision": next_revision, "results": results} if results else None
     _save_state(eff_site_id, next_revision, next_last_result)
 
